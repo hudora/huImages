@@ -1,3 +1,4 @@
+#!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 
 # Created 2006, 2009 by Maximillian Dornseif. Consider it BSD licensed.
@@ -8,6 +9,7 @@ import os
 import os.path
 import tempfile
 from wsgiref.simple_server import make_server
+from flup.server.fcgi import WSGIServer
 
 COUCHSERVER = "http://couchdb.local.hudora.biz:5984"
 COUCHDB_NAME = "huimages"
@@ -114,11 +116,16 @@ def imagserver(environ, start_response):
         os.rename(tempfilename, cachefilename)
         imagefile = open(cachefilename)
     
-    start_response('200 OK', [('Content-Type', 'image/jpeg'),
-                              ('Cache-Control', 'max-age=1209600, public'), # 14 Days
-                              ])
     return imagefile
 
+
+def save_imagserver(environ, start_response):
+    try:
+        return save_imagserver(environ, start_response)
+    except:
+        start_response('500 OK', [('Content-Type', 'text/plain')])
+        return ['Error']
+    
 
 def _get_original_file(doc_id):
     """Returns a filehandle for the unscaled file related to doc_id."""
@@ -145,11 +152,14 @@ def _get_original_file(doc_id):
     return open(cachefilename)
 
 
-if __name__ == '__main__':
-    PORT = 8000
-    httpd = make_server('', PORT, app)
+standalone = False
+if standalone:
+    PORT = 80
+    httpd = make_server('', PORT, imagserver)
     print 'Starting up HTTP server on port %i...' % PORT
     
     # Respond to requests until process is killed
     httpd.serve_forever()
-    
+
+# FastCGI
+WSGIServer(save_imagserver).run() # , bindAddress = '/tmp/fastcgi.socket').run()
