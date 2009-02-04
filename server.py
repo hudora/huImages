@@ -9,7 +9,7 @@ import os
 import os.path
 import tempfile
 from wsgiref.simple_server import make_server
-from flup.server.fcgi import WSGIServer
+from flup.server.fcgi_fork import WSGIServer
 
 COUCHSERVER = "http://couchdb.local.hudora.biz:5984"
 COUCHDB_NAME = "huimages"
@@ -86,7 +86,6 @@ def imagserver(environ, start_response):
     cachefilename = os.path.join(CACHEDIR, typ, doc_id + '.jpeg')
     if os.path.exists(cachefilename):
         # serve request from cache
-        print "Cache Hit"
         start_response('200 OK', [('Content-Type', 'image/jpeg'),
                                   ('Cache-Control', 'max-age=172800, public'), # 2 Days
                                   ])
@@ -116,14 +115,21 @@ def imagserver(environ, start_response):
         os.rename(tempfilename, cachefilename)
         imagefile = open(cachefilename)
     
+    start_response('200 OK', [('Content-Type', 'image/jpeg'),
+                              ('Cache-Control', 'max-age=172800, public'), # 2 Days
+                              ])
     return imagefile
 
 
 def save_imagserver(environ, start_response):
     try:
-        return save_imagserver(environ, start_response)
+        return imagserver(environ, start_response)
     except:
-        start_response('500 OK', [('Content-Type', 'text/plain')])
+        raise
+        try:
+            start_response('500 OK', [('Content-Type', 'text/plain')])
+        except:
+            pass
         return ['Error']
     
 
@@ -154,7 +160,7 @@ def _get_original_file(doc_id):
 
 standalone = False
 if standalone:
-    PORT = 80
+    PORT = 8080
     httpd = make_server('', PORT, imagserver)
     print 'Starting up HTTP server on port %i...' % PORT
     
