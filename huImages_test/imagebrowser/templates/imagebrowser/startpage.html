@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title>startpage</title>
+    <script type="text/javascript" src="http://s.hdimg.net/jquery/jquery-1.3.1.min.js"></script>
+    <script src="http://s.hdimg.net/jquery/jquery.tagcloud.js" type="text/javascript"></script>
+
+<style type="text/css">
+body {
+    margin-top: 1.0em;
+    background-color: #ffffff;
+    font-family: "helvetica"; 
+    color: #000000;
+    text-align:center;
+}
+h1 { font-size: 3.8em; color: #000000;  }
+h1 a { text-decoration: none; }
+a { color: #000000; }
+#tagcloud a { text-decoration: none; }
+#tagcloud a:hover { text-decoration: underline; }
+#tagcloud { margin: 25px auto; font: 50%, Arial, "MS Trebuchet", sans-serif;}
+</style>
+    
+</head>
+
+</head>
+<body>
+    <h1><a href=".">HUDORA Bilderpool</a></h1>
+    
+    <div id="imagematrix">
+    {% for line in lines %}
+        {% for col in line %}
+          {{ col }}
+        {% endfor %}<br />
+    {% endfor %}
+    </div>
+    
+      <div id="tagcloud">
+{% for tag, count in tags %}
+        <a href="tags/{{ tag }}/" rel="{{ count }}">{{ tag }}</a>
+{% endfor %}
+      </div>
+
+</body>
+<script type="text/javascript" charset="utf-8">
+ $(document).ready(function(){
+   $("#tagcloud a").tagcloud({
+     size: {
+       start: 8,
+       end: 18,
+       unit: "pt"
+     }, 
+     color: {
+       start: "#CDE", 
+       end: "#F52"
+     }
+   });
+   $('#tagForm').submit(function() {
+   return false;
+ })
+})
+</script>
+</html>
