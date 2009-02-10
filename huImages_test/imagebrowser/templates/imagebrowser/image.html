@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+	"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title>image</title>
+    <link type="text/css" rel="stylesheet" href="http://s.hdimg.net/jquery/themes/default/default.css" />
+    <script type="text/javascript" src="http://s.hdimg.net/jquery/jquery-1.3.1.min.js"></script>
+    <script type="text/javascript" src="http://s.hdimg.net/jquery/forms-2.18.js"></script>
+    <script type="text/javascript" src="http://s.hdimg.net/jquery/jquery.rater.js"></script>
+    <script type="text/javascript" src="http://s.hdimg.net/jquery/jquery.jeditable.js"></script> 
+    <link rel="stylesheet" type="text/css" href="http://s.hdimg.net/jquery/rater.css" media="screen" />
+<style type="text/css">
+body {
+    margin-top: 0.5em;
+    background-color: #ffffff;
+    font-family: "helvetica"; 
+    color: #000000;
+}
+h1 { font-size: 3.8em; color: #000000;  }
+</style>
+</head>
+
+<body>
+    <div id="favorite" style="float: right" ></div>
+    <h1 class="edit" id="title">{{ title }}</h1>
+
+    <div id ="rightcolumn"  style="float: right">
+        <div>
+        {{ previous }}
+        {{ next }}
+        </div>
+        <div>
+            <a href="previous/">previous</a>
+            <a href="../random/">random</a>
+            <a href="next/">next</a>
+        </div>  
+        
+        <div>
+            Rating:
+            <div id="rating"></div>
+        </div>
+        
+        <div id="tagarea" style="float: right">
+            <ul id="tags">
+                {% for tag in tags %}
+                    <li>{{ tag }}</li>
+                {% endfor %}
+            </ul>
+        
+            <a id="addTags" href="#">Add Tags ...</a>
+            <form id="tagForm" class="hidden" action="tag/" method="post"> 
+                Add Tags:<br />
+                <input type="text" id="newtag" name="newtag" /><br />
+                <input type="submit" value="Save" /> 
+                <img class="indicator hidden" src="http://s.hdimg.net/www/img/loading.gif" />
+            </form>
+        </div>
+    </div>
+    
+    {{ imagetag }}
+    
+</body>
+<script type="text/javascript"> 
+    // wait for the DOM to be loaded 
+    $(document).ready(function() { 
+        $('.hidden').hide();
+        var options = {
+            clearForm:    true,
+            dataType:     "json",
+            beforeSubmit: function() { 
+                $("#tagForm").attr("disabled", true);
+                $("#tagForm .indicator").show();
+            },
+            success: function(response) {
+                $('#addTags').show();
+                $("#tagForm .indicator").hide();
+                $("#tagForm").hide("fast"); 
+                response.forEach(function(t) {$("#tags").append("<li>"+t+"</li>");} );
+                $("#tagForm").attr("disabled", false);
+            },
+        }; 
+        // bind 'tagForm' and provide a simple callback function 
+        $('#tagForm').ajaxForm(options); 
+        $('#addTags').click(function() {
+            $('#addTags').hide();
+            $('#tagForm').show("fast");
+            $("#newtag").focus();
+        });
+        $('#favorite').rater('favorite/', {maxvalue: 1, style: 'basic',
+                                           curvalue: {% if favorite %}1{% else %}0{% endif %} });
+        $('#rating').rater('rate/', {maxvalue:10, style: 'small', curvalue: {{ rating }}});
+        $(document).ready(function() {
+            $('.edit').editable('update_title/', { 
+                cancel    : 'Cancel',
+                submit    : 'OK',
+                indicator : '<img src="http://s.hdimg.net/www/img/loading.gif" />',
+                tooltip   : 'Click to edit...'
+            });
+        });
+    }); 
+</script> 
+</html>
