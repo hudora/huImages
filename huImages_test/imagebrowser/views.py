@@ -1,5 +1,101 @@
 # Create your views here.
 
+import copy
+import threading
+# from http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/84317
+class Future:
+    def __init__(self, func, *args, **kwargs):
+        # Constructor
+        self.__done=0
+        self.__result=None
+        self.__status='working'
+        self.__excpt = None
+        
+        self.__C=threading.Condition()   # Notify on this Condition when result is ready
+        
+        # Run the actual function in a separate thread
+        self.__T=threading.Thread(target=self.Wrapper,args=((func,) + args), **kwargs)
+        self.__T.setName("FutureThread")
+        self.__T.start()
+    
+    def __repr__(self):
+        return '<Future at '+hex(id(self))+':'+self.__status+'>'
+    
+    def __call__(self):
+        self.__C.acquire()
+        while self.__done==0:
+            self.__C.wait()
+        self.__C.release()
+        # We deepcopy __result to prevent accidental tampering with it.
+        a=copy.deepcopy(self.__result)
+        if self.__excpt:
+            raise self.__excpt[0], self.__excpt[1], self.__excpt[2]
+        return a
+    
+    def Wrapper(self, func, *args, **kwargs):
+        # Run the actual function, and let us housekeep around it
+        self.__C.acquire()
+        try:
+            self.__result=func(*args, **kwargs)
+        except:
+            self.__result="Exception raised within Future"
+            self.__excpt = sys.exc_info()
+        self.__done=1
+        self.__status=self.__result
+        self.__C.notify()
+        self.__C.release()
+    
+
+import cPickle as pickle
+import md5
+
+def cache_function(length):
+    """
+    A variant of the snippet posted by Jeff Wheeler at
+    http://www.djangosnippets.org/snippets/109/
+    
+    Caches a function, using the function and its arguments as the key, and the return
+    value as the value saved. It passes all arguments on to the function, as
+    it should.
+    
+    The decorator itself takes a length argument, which is the number of
+    seconds the cache will keep the result around.
+    
+    It will put in a MethodNotFinishedError in the cache while the function is
+    processing. This should not matter in most cases, but if the app is using
+    threads, you won't be able to get the previous value, and will need to
+    wait until the function finishes. If this is not desired behavior, you can
+    remove the first two lines after the ``else``.
+    """
+    def decorator(func):
+        def inner_func(*args, **kwargs):
+            from django.core.cache import cache
+            
+            raw = [func.__name__, func.__module__, args, kwargs]
+            pickled = pickle.dumps(raw, protocol=pickle.HIGHEST_PROTOCOL)
+            key = md5.new(pickled).hexdigest()
+            value = cache.get(key)
+            if cache.has_key(key):
+                return value
+            else:
+                # This will set a temporary value while ``func`` is being
+                # processed. When using threads, this is vital, as otherwise
+                # the function can be called several times before it finishes
+                # and is put into the cache.
+                class MethodNotFinishedError(Exception): pass
+                cache.set(key, MethodNotFinishedError(
+                    'The function %s has not finished processing yet. This \
+value will be replaced when it finishes.' % (func.__name__)
+                ), length)
+                result = func(*args, **kwargs)
+                cache.set(key, result, length)
+                return result
+        return inner_func
+    return decorator
+
+# *********************
+
+
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
@@ -17,6 +113,7 @@ import time
 import time
 import urlparse
 import couchdb.client
+from operator import itemgetter
 
 # from django.core import urlresolvers
 # from django.conf import settings
@@ -183,6 +280,7 @@ def is_favorite(imageid, userid):
     return db.get(doc_id, {}).get('favorite', False)
     
 
+@cache_function(60)
 def get_tagcount():
     server = couchdb.client.Server(COUCHSERVER)
     db = server[COUCHDB_NAME+'_meta']
@@ -222,64 +320,16 @@ def update_user_metadata(imageid, userid, data):
         
 # ****************************
 
-import copy
-import threading
-# from http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/84317
-class Future:
-    def __init__(self, func, *args, **kwargs):
-        # Constructor
-        self.__done=0
-        self.__result=None
-        self.__status='working'
-        self.__excpt = None
-        
-        self.__C=threading.Condition()   # Notify on this Condition when result is ready
-        
-        # Run the actual function in a separate thread
-        self.__T=threading.Thread(target=self.Wrapper,args=((func,) + args), **kwargs)
-        self.__T.setName("FutureThread")
-        self.__T.start()
-    
-    def __repr__(self):
-        return '<Future at '+hex(id(self))+':'+self.__status+'>'
-    
-    def __call__(self):
-        self.__C.acquire()
-        while self.__done==0:
-            self.__C.wait()
-        self.__C.release()
-        # We deepcopy __result to prevent accidental tampering with it.
-        a=copy.deepcopy(self.__result)
-        if self.__excpt:
-            raise self.__excpt[0], self.__excpt[1], self.__excpt[2]
-        return a
-    
-    def Wrapper(self, func, *args, **kwargs):
-        # Run the actual function, and let us housekeep around it
-        self.__C.acquire()
-        try:
-            self.__result=func(*args, **kwargs)
-        except:
-            self.__result="Exception raised within Future"
-            self.__excpt = sys.exc_info()
-        self.__done=1
-        self.__status=self.__result
-        self.__C.notify()
-        self.__C.release()
-    
-
-# *********************
-
 def startpage(request):
     lines = []
-    future_result = Future(get_tagcount) # start gathering result in a separate thread
     for y in range(3):
         line = []
         for x in range(5):
             imageid = get_random_imageid()
             line.append(mark_safe('<a href="image/%s/">%s</a>' % (imageid, scaled_tag(imageid, "150x150!"))))
         lines.append(line)
-    tagcount = sorted(future_result().items())
+    tagcount = get_tagcount().items()
+    tagcount.sort()
     return render_to_response('imagebrowser/startpage.html', {'lines': lines, 'tags': tagcount},
                                 context_instance=RequestContext(request))
 
@@ -310,6 +360,15 @@ def next_image(request, imageid):
     return HttpResponseRedirect("../../%s/" % get_next_imageid(imageid))
     
 
+def tag_suggestion(request, imageid):
+    prefix = request.GET.get('tag', '')
+    tagcount = get_tagcount().items()
+    tagcount.sort(key = itemgetter(1), reverse=True)
+    json = simplejson.dumps([x[0] for x in tagcount if x[0].startswith(prefix)])
+    response = HttpResponse(json, mimetype='application/json')
+    return response
+    
+
 def favorite(request, imageid):
     if request.POST['rating'] == '1':
         update_user_metadata(imageid, request.clienttrack_uid, {'favorite': True})
@@ -332,6 +391,7 @@ def tag(request, imageid):
     tags = set(get_user_tags(imageid, request.clienttrack_uid) + newtags)
     tags = [x.lower() for x in list(tags) if x]
     update_user_metadata(imageid, request.clienttrack_uid, {'tags': tags})
+    # todo: flush tag cache
     json = simplejson.dumps(newtags)
     response = HttpResponse(json, mimetype='application/json')
     return response
