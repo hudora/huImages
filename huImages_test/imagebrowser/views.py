@@ -360,6 +360,23 @@ def next_image(request, imageid):
     return HttpResponseRedirect("../../%s/" % get_next_imageid(imageid))
     
 
+def by_tag(request, tagname):
+    server = couchdb.client.Server(COUCHSERVER)
+    db = server[COUCHDB_NAME+'_meta']
+    ret = [x.value for x in db.view('tags/document_per_tag', startkey=tagname, endkey="%sZ" % tagname)]
+    print ret
+    lines = []
+    while ret:
+        line = []
+        for x in range(5):
+            if ret:
+                imageid = ret.pop()
+                line.append(mark_safe('<a href="/images/image/%s/">%s</a>' % (imageid, scaled_tag(imageid, "150x150!"))))
+        lines.append(line)
+    return render_to_response('imagebrowser/startpage.html', {'lines': lines, 'tags': None},
+                                context_instance=RequestContext(request))
+    
+
 def tag_suggestion(request, imageid):
     prefix = request.GET.get('tag', '')
     tagcount = get_tagcount().items()
@@ -369,6 +386,7 @@ def tag_suggestion(request, imageid):
     return response
     
 
+# AJAX bookmarking
 def favorite(request, imageid):
     if request.POST['rating'] == '1':
         update_user_metadata(imageid, request.clienttrack_uid, {'favorite': True})
@@ -377,6 +395,7 @@ def favorite(request, imageid):
     return HttpResponse('ok', mimetype='application/json')
     
 
+# AJAX rating
 def rate(request, imageid):
     update_user_metadata(imageid, request.clienttrack_uid, {'rating': int(request.POST['rating'])})
     votecount, rating = get_rating(imageid)
@@ -385,9 +404,10 @@ def rate(request, imageid):
     return response
     
 
+# AJAX tagging
 def tag(request, imageid):
-    newtags = request.POST['newtag'].lower().split(',')
-    newtags = [x.strip() for x in newtags]
+    newtags = request.POST['newtag'].lower().replace(',', ' ').split(' ')
+    newtags = [x.strip() for x in newtags if x.strip()]
     tags = set(get_user_tags(imageid, request.clienttrack_uid) + newtags)
     tags = [x.lower() for x in list(tags) if x]
     update_user_metadata(imageid, request.clienttrack_uid, {'tags': tags})
@@ -397,6 +417,7 @@ def tag(request, imageid):
     return response
     
 
+# AJAX titeling
 def update_title(request, imageid):
     db = _setup_couchdb()
     title = request.POST['value']

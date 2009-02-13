@@ -15,5 +15,6 @@ urlpatterns = patterns('',
     (r'^image/(?P<imageid>.+)/update_title/', 'imagebrowser.views.update_title'),
     (r'^image/(?P<imageid>.+)/tag_suggestion/', 'imagebrowser.views.tag_suggestion'),
     (r'^image/(?P<imageid>.+)/', 'imagebrowser.views.image'),
-    (r'^', 'imagebrowser.views.startpage'),
+    (r'^tag/(?P<tagname>.+)/', 'imagebrowser.views.by_tag'),
+    (r'^$', 'imagebrowser.views.startpage'),
 )
