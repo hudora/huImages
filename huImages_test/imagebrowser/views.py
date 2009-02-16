@@ -290,7 +290,7 @@ def get_tagcount():
 def get_random_imageid():
     db = _setup_couchdb()
     startkey = base64.b32encode(hashlib.sha1(str(random.random())).digest()).rstrip('=')
-    return [x.id for x in db.view('_all_docs', startkey=startkey, limit=1)][0]
+    return [x.id for x in db.view('all/without_deleted', startkey=startkey, limit=1)][0]
     
 
 def get_next_imageid(imageid):
@@ -321,17 +321,68 @@ def update_user_metadata(imageid, userid, data):
 # ****************************
 
 def startpage(request):
-    lines = []
-    for y in range(3):
+    def get_line():
         line = []
         for x in range(5):
             imageid = get_random_imageid()
             line.append(mark_safe('<a href="image/%s/">%s</a>' % (imageid, scaled_tag(imageid, "150x150!"))))
-        lines.append(line)
-    tagcount = get_tagcount().items()
+        return line
+    
+    tagfuture = Future(get_tagcount)
+    linef = []
+    for y in range(3):
+        linef.append(Future(get_line))
+    tagcount = tagfuture().items()
     tagcount.sort()
-    return render_to_response('imagebrowser/startpage.html', {'lines': lines, 'tags': tagcount},
+    lines = []
+    for line in linef:
+        lines.append(line())
+    return render_to_response('imagebrowser/startpage.html', {'lines': lines, 'tags': tagcount, 
+                              'title': 'HUDORA Bilderarchiv'},
                                 context_instance=RequestContext(request))
+    
+
+def favorites_redirect(request):
+    # TODO: extract
+    server = couchdb.client.Server(COUCHSERVER)
+    db = server[COUCHDB_NAME+'_meta']
+    return HttpResponseRedirect("%s/" % request.clienttrack_uid)
+    
+
+def favorites(request, uid):
+    # TODO: extract
+    server = couchdb.client.Server(COUCHSERVER)
+    db = server[COUCHDB_NAME+'_meta']
+    ret = [x.value for x in db.view('favorites/all', startkey=uid, endkey="%sZ" % request.clienttrack_uid)]
+    lines = []
+    while ret:
+        line = []
+        for x in range(5):
+            if ret:
+                imageid = ret.pop()
+                line.append(mark_safe('<a href="/images/image/%s/">%s</a>' % (imageid, scaled_tag(imageid, "150x150!"))))
+        lines.append(line)
+    return render_to_response('imagebrowser/startpage.html', {'lines': lines, 'title': 'Ihre Favoriten'},
+                                context_instance=RequestContext(request))
+    
+
+def by_tag(request, tagname):
+    # TODO: extract
+    server = couchdb.client.Server(COUCHSERVER)
+    db = server[COUCHDB_NAME+'_meta']
+    ret = [x.value for x in db.view('tags/document_per_tag', startkey=tagname, endkey="%sZ" % tagname)]
+    print ret
+    lines = []
+    while ret:
+        line = []
+        for x in range(5):
+            if ret:
+                imageid = ret.pop()
+                line.append(mark_safe('<a href="/images/image/%s/">%s</a>' % (imageid, scaled_tag(imageid, "150x150!"))))
+        lines.append(line)
+    return render_to_response('imagebrowser/startpage.html', {'lines': lines, 'title': 'Tag "%s"' % tagname},
+                                context_instance=RequestContext(request))
+    
 
 def image(request, imageid):
     imagetag = mark_safe('<a href="%s">%s</a>' % (imageurl(imageid), scaled_tag(imageid, "vga")))
@@ -358,23 +409,6 @@ def random_image(request):
 
 def next_image(request, imageid):
     return HttpResponseRedirect("../../%s/" % get_next_imageid(imageid))
-    
-
-def by_tag(request, tagname):
-    server = couchdb.client.Server(COUCHSERVER)
-    db = server[COUCHDB_NAME+'_meta']
-    ret = [x.value for x in db.view('tags/document_per_tag', startkey=tagname, endkey="%sZ" % tagname)]
-    print ret
-    lines = []
-    while ret:
-        line = []
-        for x in range(5):
-            if ret:
-                imageid = ret.pop()
-                line.append(mark_safe('<a href="/images/image/%s/">%s</a>' % (imageid, scaled_tag(imageid, "150x150!"))))
-        lines.append(line)
-    return render_to_response('imagebrowser/startpage.html', {'lines': lines, 'tags': None},
-                                context_instance=RequestContext(request))
     
 
 def tag_suggestion(request, imageid):
