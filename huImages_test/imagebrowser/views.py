@@ -344,8 +344,6 @@ def startpage(request):
 
 def favorites_redirect(request):
     # TODO: extract
-    server = couchdb.client.Server(COUCHSERVER)
-    db = server[COUCHDB_NAME+'_meta']
     return HttpResponseRedirect("%s/" % request.clienttrack_uid)
     
 
@@ -371,7 +369,6 @@ def by_tag(request, tagname):
     server = couchdb.client.Server(COUCHSERVER)
     db = server[COUCHDB_NAME+'_meta']
     ret = [x.value for x in db.view('tags/document_per_tag', startkey=tagname, endkey="%sZ" % tagname)]
-    print ret
     lines = []
     while ret:
         line = []
