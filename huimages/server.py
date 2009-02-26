@@ -36,6 +36,7 @@ def _scale_image(width, height, image):
     res = image.resize((int(float(xsize) * lfactor), int(float(ysize) * lfactor)), Image.ANTIALIAS)
     return res
 
+
 def _crop_image(width, height, image):
     """
     This will crop the largest block out of the middle of an image
@@ -70,6 +71,7 @@ def _crop_image(width, height, image):
 
 
 CACHEDIR = './cache'
+
 
 def imagserver(environ, start_response):
     parts = environ.get('PATH_INFO', '').split('/')
@@ -152,4 +154,3 @@ if __name__ == '__main__':
     
     # Respond to requests until process is killed
     httpd.serve_forever()
-    
