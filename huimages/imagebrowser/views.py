@@ -7,11 +7,8 @@ Created by Maximillian Dornseif on 2009-01-29.
 Copyright (c) 2009 HUDORA. All rights reserved.
 """
 
-# Create your views here.
-
 
 import couchdb.client
-import os.path
 from operator import itemgetter
 from huTools.async import Future
 from huTools.decorators import cache_function
@@ -21,6 +18,8 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils.safestring import mark_safe
 from django.utils import simplejson
+
+from huimages import *
 
 IMAGESERVER = "http://i.hdimg.net"
 COUCHSERVER = "http://couchdb.local.hudora.biz:5984"
@@ -74,7 +73,23 @@ def update_user_metadata(imageid, userid, data):
         doc = db[doc_id]
         doc.update(data)
         db[doc_id] = doc
-        
+    
+
+def images_by_tag(tagname):
+    """Returns ImageIds with a certain tag."""
+    server = couchdb.client.Server(COUCHSERVER)
+    db = server[COUCHDB_NAME+'_meta']
+    ret = [x.value for x in db.view('tags/document_per_tag', startkey=tagname, endkey="%sZ" % tagname)]
+    return ret
+    
+
+def get_favorites(uid):
+    server = couchdb.client.Server(COUCHSERVER)
+    db = server[COUCHDB_NAME+'_meta']
+    ret = [x.value for x in db.view('favorites/all', startkey=uid, endkey="%sZ" % uid)]
+    return ret
+    
+
 # ****************************
 
 
@@ -82,14 +97,14 @@ def startpage(request):
     
     def get_line():
         line = []
-        for x in range(5):
+        for dummy in range(5):
             imageid = get_random_imageid()
             line.append(mark_safe('<a href="image/%s/">%s</a>' % (imageid, scaled_tag(imageid, "150x150!"))))
         return line
     
     tagfuture = Future(get_tagcount)
     linef = []
-    for y in range(3):
+    for dummy in range(3):
         linef.append(Future(get_line))
     tagcount = tagfuture().items()
     tagcount.sort()
@@ -102,19 +117,16 @@ def startpage(request):
     
 
 def favorites_redirect(request):
-    # TODO: extract
+    """Redirects to the user specific favorites page."""
     return HttpResponseRedirect("%s/" % request.clienttrack_uid)
     
 
 def favorites(request, uid):
-    # TODO: extract
-    server = couchdb.client.Server(COUCHSERVER)
-    db = server[COUCHDB_NAME+'_meta']
-    ret = [x.value for x in db.view('favorites/all', startkey=uid, endkey="%sZ" % request.clienttrack_uid)]
+    ret = get_favorites(uid, request)
     lines = []
     while ret:
         line = []
-        for x in range(5):
+        for dummy in range(5):
             if ret:
                 imageid = ret.pop()
                 line.append(mark_safe('<a href="/images/image/%s/">%s</a>' % (imageid,
@@ -125,14 +137,11 @@ def favorites(request, uid):
     
 
 def by_tag(request, tagname):
-    # TODO: extract
-    server = couchdb.client.Server(COUCHSERVER)
-    db = server[COUCHDB_NAME+'_meta']
-    ret = [x.value for x in db.view('tags/document_per_tag', startkey=tagname, endkey="%sZ" % tagname)]
+    ret = images_by_tag(tagname)
     lines = []
     while ret:
         line = []
-        for x in range(5):
+        for dummy in range(5):
             if ret:
                 imageid = ret.pop()
                 line.append(mark_safe('<a href="/images/image/%s/">%s</a>' % (imageid,
@@ -146,12 +155,12 @@ def image(request, imageid):
     imagetag = mark_safe('<a href="%s">%s</a>' % (imageurl(imageid), scaled_tag(imageid, "vga")))
     imagedoc = get_imagedoc(imageid)
     votecount, rating = get_rating(imageid)
-    favorite = is_favorite(imageid, request.clienttrack_uid)
+    is_favorite = is_favorite(imageid, request.clienttrack_uid)
     tags = get_user_tags(imageid, request.clienttrack_uid)
     previousid = get_previous_imageid(imageid)
     nextid = get_next_imageid(imageid)
     return render_to_response('imagebrowser/image.html', {'imagetag': imagetag,
-         'favorite': favorite, 'tags': tags, 'rating': rating,
+         'favorite': is_favorite, 'tags': tags, 'rating': rating,
         'previous': mark_safe('<a href="../../image/%s/">%s</a>' % (previousid,
                               scaled_tag(previousid, "75x75!"))),
         'next': mark_safe('<a href="../../image/%s/">%s</a>' % (nextid, scaled_tag(nextid, "75x75!"))),
@@ -213,11 +222,6 @@ def tag(request, imageid):
 
 # AJAX titeling
 def update_title(request, imageid):
-    db = _setup_couchdb()
-    title = request.POST['value']
-    doc = get_imagedoc(imageid)
-    if title and title not in doc.get('title', []):
-        doc.setdefault('title', []).append(title)
-    db[imageid] = doc
-    response = HttpResponse(title, mimetype='text/plain')
+    set_title(request.POST['value'])
+    response = HttpResponse(request.POST['value'], mimetype='text/plain')
     return response

@@ -52,7 +52,7 @@ _sizes = {'mini': "23x40",
 
 def _datetime2str(dateobj):
     """Converts a datetime object to a usable string."""
-    return "%s.%06d" % (dateobj.strftime('%Y%m%dT%H%M%S'), d.microsecond)
+    return "%s.%06d" % (dateobj.strftime('%Y%m%dT%H%M%S'), dateobj.microsecond)
     
 
 def _setup_couchdb():
@@ -169,8 +169,6 @@ def scaled_tag(imageid, size='square', *args, **kwargs):
     return ' '.join(ret)
     
 
-# Meta-Data related functionality
-
 
 def get_random_imageid():
     db = _setup_couchdb()
@@ -186,3 +184,13 @@ def get_next_imageid(imageid):
 def get_previous_imageid(imageid):
     db = _setup_couchdb()
     return [x.id for x in db.view('_all_docs', startkey=imageid, limit=2, descending=True)][-1]
+
+
+# Meta-Data related functionality
+
+def set_title(imageid, newtitle):
+    db = _setup_couchdb()
+    doc = get_imagedoc(imageid)
+    if newtitle and newtitle not in doc.get('title', []):
+        doc.setdefault('title', []).append(newtitle)
+    db[imageid] = doc

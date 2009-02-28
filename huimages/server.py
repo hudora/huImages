@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""Serving images out of CouchDB. Runs on i.hdimg.net."""
+
 # Created 2006, 2009 by Maximillian Dornseif. Consider it BSD licensed.
 
 import couchdb.client
