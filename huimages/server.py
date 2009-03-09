@@ -1,5 +1,6 @@
-#!/usr/local/bin/python
 # -*- coding: utf-8 -*-
+
+"""Serving images out of CouchDB. Runs on i.hdimg.net."""
 
 # Created 2006, 2009 by Maximillian Dornseif. Consider it BSD licensed.
 
@@ -9,7 +10,6 @@ import os
 import os.path
 import tempfile
 from wsgiref.simple_server import make_server
-from flup.server.fcgi_fork import WSGIServer
 
 COUCHSERVER = "http://couchdb.local.hudora.biz:5984"
 COUCHDB_NAME = "huimages"
@@ -37,6 +37,7 @@ def _scale_image(width, height, image):
         lfactor = float(height) / float(ysize)
     res = image.resize((int(float(xsize) * lfactor), int(float(ysize) * lfactor)), Image.ANTIALIAS)
     return res
+
 
 def _crop_image(width, height, image):
     """
@@ -73,6 +74,7 @@ def _crop_image(width, height, image):
 
 CACHEDIR = './cache'
 
+
 def imagserver(environ, start_response):
     parts = environ.get('PATH_INFO', '').split('/')
     if len(parts) != 3:
@@ -86,6 +88,7 @@ def imagserver(environ, start_response):
     cachefilename = os.path.join(CACHEDIR, typ, doc_id + '.jpeg')
     if os.path.exists(cachefilename):
         # serve request from cache
+        print "Cache Hit"
         start_response('200 OK', [('Content-Type', 'image/jpeg'),
                                   ('Cache-Control', 'max-age=172800, public'), # 2 Days
                                   ])
@@ -116,22 +119,10 @@ def imagserver(environ, start_response):
         imagefile = open(cachefilename)
     
     start_response('200 OK', [('Content-Type', 'image/jpeg'),
-                              ('Cache-Control', 'max-age=172800, public'), # 2 Days
+                              ('Cache-Control', 'max-age=1209600, public'), # 14 Days
                               ])
     return imagefile
 
-
-def save_imagserver(environ, start_response):
-    try:
-        return imagserver(environ, start_response)
-    except:
-        raise
-        try:
-            start_response('500 OK', [('Content-Type', 'text/plain')])
-        except:
-            pass
-        return ['Error']
-    
 
 def _get_original_file(doc_id):
     """Returns a filehandle for the unscaled file related to doc_id."""
@@ -158,14 +149,10 @@ def _get_original_file(doc_id):
     return open(cachefilename)
 
 
-standalone = False
-if standalone:
-    PORT = 8080
-    httpd = make_server('', PORT, imagserver)
+if __name__ == '__main__':
+    PORT = 8000
+    httpd = make_server('', PORT, app)
     print 'Starting up HTTP server on port %i...' % PORT
     
     # Respond to requests until process is killed
     httpd.serve_forever()
-
-# FastCGI
-WSGIServer(save_imagserver).run() # , bindAddress = '/tmp/fastcgi.socket').run()

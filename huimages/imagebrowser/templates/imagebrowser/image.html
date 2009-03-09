@@ -10,6 +10,7 @@
     <script type="text/javascript" src="http://s.hdimg.net/jquery/forms-2.18.js"></script>
     <script type="text/javascript" src="http://s.hdimg.net/jquery/jquery.rater.js"></script>
     <script type="text/javascript" src="http://s.hdimg.net/jquery/jquery.jeditable.js"></script> 
+    <script type="text/javascript" src="http://s.hdimg.net/jquery/tag.suggestion.js"></script> 
     <link rel="stylesheet" type="text/css" href="http://s.hdimg.net/jquery/rater.css" media="screen" />
 <style type="text/css">
 body {
@@ -19,6 +20,17 @@ body {
     color: #000000;
 }
 h1 { font-size: 3.8em; color: #000000;  }
+DIV.tagMatches {
+    margin-left: 10px;
+    width: 200px;
+}
+DIV.tagMatches SPAN {
+    padding: 2px;
+    margin-right: 4px;
+    background-color: #0000AB;
+    color: #fff;
+    cursor: pointer;
+}
 </style>
 </head>
 
@@ -45,14 +57,14 @@ h1 { font-size: 3.8em; color: #000000;  }
         <div id="tagarea" style="float: right">
             <ul id="tags">
                 {% for tag in tags %}
-                    <li>{{ tag }}</li>
+                    <li><a href="/images/tag/{{ tag }}/">{{ tag }}</a></li>
                 {% endfor %}
             </ul>
         
             <a id="addTags" href="#">Add Tags ...</a>
-            <form id="tagForm" class="hidden" action="tag/" method="post"> 
+            <form id="tagForm" class="hidden" action="tag/" method="post" autocomplete="off"> 
                 Add Tags:<br />
-                <input type="text" id="newtag" name="newtag" /><br />
+                <input type="text" id="newtag" name="newtag" class="tagSuggest" /><br />
                 <input type="submit" value="Save" /> 
                 <img class="indicator hidden" src="http://s.hdimg.net/www/img/loading.gif" />
             </form>
@@ -77,7 +89,7 @@ h1 { font-size: 3.8em; color: #000000;  }
                 $('#addTags').show();
                 $("#tagForm .indicator").hide();
                 $("#tagForm").hide("fast"); 
-                response.forEach(function(t) {$("#tags").append("<li>"+t+"</li>");} );
+                response.forEach(function(t) {$("#tags").append('<li><a href="/images/tag/'+t+'/">'+t+"</a></li>");} );
                 $("#tagForm").attr("disabled", false);
             },
         }; 
@@ -87,6 +99,11 @@ h1 { font-size: 3.8em; color: #000000;  }
             $('#addTags').hide();
             $('#tagForm').show("fast");
             $("#newtag").focus();
+        });
+        $('input.tagSuggest').tagSuggest({
+            tagContainer: 'div',
+            url: 'tag_suggestion/',
+            tags: ['javascript', 'js2', 'js', 'jquery', 'java']
         });
         $('#favorite').rater('favorite/', {maxvalue: 1, style: 'basic',
                                            curvalue: {% if favorite %}1{% else %}0{% endif %} });
