@@ -42,6 +42,7 @@ import os.path
 import random
 import time
 import urlparse
+from cStringIO import StringIO
 from operator import itemgetter
 from huTools.async import Future
 from huTools.decorators import cache_function
@@ -72,8 +73,23 @@ def _setup_couchdb():
         return server.create(COUCHDB_NAME)
     
 
-def save_image(imagedata, contenttype=None, timestamp=None, title='', references={}, filename='image.jpeg'):  
-    """Stores an Image in the database. Returns the image ID for further image access."""
+def save_image(imagedata, contenttype=None, timestamp=None, title='', 
+               references={}, filename='image.jpeg', typ=''):  
+    """Stores an Image in the database. Returns the image ID for further image access.
+    
+    contenttype should be the Mime-Type of the image or None. If not given the library tries to
+    determine the content-type from the filename parameter.
+    
+    timestamp should be a datetime object representing the creation time of the image or None.
+    
+    title should be an title for the image.
+    
+    references can be arbitrary data e.g. referencing an article number.
+    
+    filename can be the original name of the file.
+    
+    typ can be the type of the image. So far only 'product_image' is used.
+    """
     db = _setup_couchdb()
     doc_id = "%s01" % base64.b32encode(hashlib.sha1(imagedata).digest()).rstrip('=')
     
@@ -89,14 +105,16 @@ def save_image(imagedata, contenttype=None, timestamp=None, title='', references
     if not 'ctime' in doc:
         doc['ctime'] = timestamp
     doc['mtime'] = timestamp
-    if 'product_image' not in doc.get('types', []):
-        doc.setdefault('types', []).append('product_image')
+    if typ and (typ not in doc.get('types', [])):
+        doc.setdefault('types', []).append(typ)
     for key, value in references.items():
         if value not in doc.get('references', {}).get(key, []):
             doc.setdefault('references', {}).setdefault(key, []).append(value)
     if title and title not in doc.get('title', []):
         doc.setdefault('title', []).append(title)
-        
+    img = Image.open(StringIO(imagedata))
+    doc.width, doc.height = img.size
+    
     db[doc_id] = doc
     if not (doc.get('_attachments')):
         db.put_attachment(db[doc_id], imagedata, filename)
@@ -197,6 +215,7 @@ def get_previous_imageid(imageid):
 
 
 # Meta-Data related functionality
+
 
 def set_title(imageid, newtitle):
     """Save an image title."""
