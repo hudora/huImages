@@ -3,8 +3,12 @@
 """
 imageserver/__init__.py
 
-Store images in couchdb and access them from a separate server.
+Store images in couchdb and access them via a separate server.
 
+You are expect to dump images via save_image(), get an ID back and furter on only use
+the ID to access the image. You can get the URL of the Image via imageurl(ID) and
+scaled_imageurl(ID). You can get a complete XHTML <img> tag via scaled_tag(ID).
+    
 This module uses the concept of "sizes". A size might be a predefined string
 like "thumb" or "svga" or a numeric specification like "240x160". If the numeric
 specification ends with "!" (like in "75x75!") the image is scaled and cropped
@@ -12,9 +16,18 @@ to be EXACTLY of that size. IF not the image keeps it aspect ratio.
 
 See imageserver._sizes for the list of predefined sizes.
 
+You can use get_random_imageid(), get_next_imageid(ID) and get_previous_imageid(ID)
+to implement image browsing.
+
+server.py implements the actual serving of image data.
+
 Created by Maximillian Dornseif on 2009-01-29.
 Copyright (c) 2009 HUDORA. All rights reserved.
 """
+
+IMAGESERVER = "http://i.hdimg.net"                   # where server.py is running
+COUCHSERVER = "http://couchdb.local.hudora.biz:5984" # where CouchDB is running
+COUCHDB_NAME = "huimages"                            # CouchDB database to use
 
 import Image 
 import base64
@@ -32,11 +45,6 @@ import urlparse
 from operator import itemgetter
 from huTools.async import Future
 from huTools.decorators import cache_function
-
-IMAGESERVER = "http://i.hdimg.net"
-COUCHSERVER = "http://couchdb.local.hudora.biz:5984"
-COUCHDB_NAME = "huimages"
-
 
 _sizes = {'mini': "23x40",
           'thumb': "50x200", 
@@ -65,7 +73,7 @@ def _setup_couchdb():
     
 
 def save_image(imagedata, contenttype=None, timestamp=None, title='', references={}, filename='image.jpeg'):  
-    """Stores an Image in the database. Returns the image ID."""
+    """Stores an Image in the database. Returns the image ID for further image access."""
     db = _setup_couchdb()
     doc_id = "%s01" % base64.b32encode(hashlib.sha1(imagedata).digest()).rstrip('=')
     
@@ -169,19 +177,21 @@ def scaled_tag(imageid, size='square', *args, **kwargs):
     return ' '.join(ret)
     
 
-
 def get_random_imageid():
+    """Returns a random (valid) ImageID."""
     db = _setup_couchdb()
     startkey = base64.b32encode(hashlib.sha1(str(random.random())).digest()).rstrip('=')
     return [x.id for x in db.view('all/without_deleted', startkey=startkey, limit=1)][0]
     
 
 def get_next_imageid(imageid):
+    """Get the 'next' ImageID."""
     db = _setup_couchdb()
     return [x.id for x in db.view('_all_docs', startkey=imageid, limit=2)][-1]
     
 
 def get_previous_imageid(imageid):
+    """Get the 'previous' ImageID."""
     db = _setup_couchdb()
     return [x.id for x in db.view('_all_docs', startkey=imageid, limit=2, descending=True)][-1]
 
@@ -189,6 +199,7 @@ def get_previous_imageid(imageid):
 # Meta-Data related functionality
 
 def set_title(imageid, newtitle):
+    """Save an image title."""
     db = _setup_couchdb()
     doc = get_imagedoc(imageid)
     if newtitle and newtitle not in doc.get('title', []):

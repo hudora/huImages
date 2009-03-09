@@ -1,5 +1,5 @@
 check: clean
-	find huimages -name '*.py'  -exec pep8 --ignore=E501,W291 --repeat {} \;
+	find huimages -name '*.py' -exec pep8 --ignore=E501,W291 --repeat {} \;
 	pylint huimages
 
 build:
@@ -7,7 +7,6 @@ build:
 
 upload: build
 	rsync dist/* root@cybernetics.hudora.biz:/usr/local/www/apache22/data/nonpublic/eggs/
-
 
 install: build
 	sudo python setup.py install
