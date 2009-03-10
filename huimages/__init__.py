@@ -128,6 +128,13 @@ def get_imagedoc(imageid):
     return doc
     
 
+def get_length(imageid):
+    """Get the length in bytes of an unmodified image."""
+    doc = get_imagedoc(imageid)
+    attachment = doc['_attachments'][doc['_attachments'].keys()[0]]
+    return attachment['length']
+    
+
 def _scale(want_width, want_height, is_width, is_height):
     """
     This function will scale an image to a given bounding box. Image
