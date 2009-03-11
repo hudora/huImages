@@ -113,13 +113,16 @@ def save_image(imagedata, contenttype=None, timestamp=None, title='',
     if title and title not in doc.get('title', []):
         doc.setdefault('title', []).append(title)
     img = Image.open(StringIO(imagedata))
-    doc.width, doc.height = img.size
+    doc['width'], doc['height'] = img.size
     
     db[doc_id] = doc
     if not (doc.get('_attachments')):
         db.put_attachment(db[doc_id], imagedata, filename)
     return doc_id
     
+
+#TODO: update_references
+
 
 def get_imagedoc(imageid):
     """Get a dictionary describing an Image."""
