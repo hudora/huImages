@@ -121,9 +121,6 @@ def save_image(imagedata, contenttype=None, timestamp=None, title='',
     return doc_id
     
 
-#TODO: update_references
-
-
 def get_imagedoc(imageid):
     """Get a dictionary describing an Image."""
     db = _setup_couchdb()
@@ -227,6 +224,39 @@ def get_previous_imageid(imageid):
 # Meta-Data related functionality
 
 
+#TODO: update_references
+def update_metadata(doc_id, timestamp=None, title='',  references={}, typ=''):
+    """Updates metadata for an image.
+    
+    timestamp should be a datetime object representing the creation time of the image or None.
+    
+    title should be an title for the image.
+    
+    references can be arbitrary data e.g. referencing an article number.
+    
+    typ can be the type of the image. So far only 'product_image' is used.
+    """
+    db = _setup_couchdb()
+    doc = get_imagedoc(doc_id)
+    
+    if timestamp:
+        timestamp = _datetime2str(datetime.datetime.now())
+        doc['mtime'] = timestamp
+        if 'ctime' not in doc:
+            doc['ctime'] = timestamp
+    
+    if typ and (typ not in doc.get('types', [])):
+        doc.setdefault('types', []).append(typ)
+    if title and title not in doc.get('title', []):
+        doc.setdefault('title', []).append(title)
+    
+    for key, value in references.items():
+        if value not in doc.get('references', {}).get(key, []):
+            doc.setdefault('references', {}).setdefault(key, []).append(value)
+    
+    db[doc_id] = doc
+    return doc_id
+    
 def set_title(imageid, newtitle):
     """Save an image title."""
     db = _setup_couchdb()
@@ -234,3 +264,4 @@ def set_title(imageid, newtitle):
     if newtitle and newtitle not in doc.get('title', []):
         doc.setdefault('title', []).append(newtitle)
     db[imageid] = doc
+

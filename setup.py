@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 setup(name='huimages',
       maintainer='Maximillian Dornseif',
       maintainer_email='md@hudora.de',
-      version='1.01p1',
+      version='1.02',
       description='Image storage & scaling in CouchDB.',
       long_description=long_description,
       classifiers=['License :: OSI Approved :: BSD License',

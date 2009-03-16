@@ -155,12 +155,12 @@ def image(request, imageid):
     imagetag = mark_safe('<a href="%s">%s</a>' % (imageurl(imageid), scaled_tag(imageid, "vga")))
     imagedoc = get_imagedoc(imageid)
     votecount, rating = get_rating(imageid)
-    is_favorite = is_favorite(imageid, request.clienttrack_uid)
+    favorite = is_favorite(imageid, request.clienttrack_uid)
     tags = get_user_tags(imageid, request.clienttrack_uid)
     previousid = get_previous_imageid(imageid)
     nextid = get_next_imageid(imageid)
     return render_to_response('imagebrowser/image.html', {'imagetag': imagetag,
-         'favorite': is_favorite, 'tags': tags, 'rating': rating,
+         'favorite': favorite, 'tags': tags, 'rating': rating,
         'previous': mark_safe('<a href="../../image/%s/">%s</a>' % (previousid,
                               scaled_tag(previousid, "75x75!"))),
         'next': mark_safe('<a href="../../image/%s/">%s</a>' % (nextid, scaled_tag(nextid, "75x75!"))),
@@ -222,6 +222,6 @@ def tag(request, imageid):
 
 # AJAX titeling
 def update_title(request, imageid):
-    set_title(request.POST['value'])
+    set_title(imageid, request.POST['value'])
     response = HttpResponse(request.POST['value'], mimetype='text/plain')
     return response
