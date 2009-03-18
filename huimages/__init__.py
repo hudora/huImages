@@ -224,7 +224,6 @@ def get_previous_imageid(imageid):
 # Meta-Data related functionality
 
 
-#TODO: update_references
 def update_metadata(doc_id, timestamp=None, title='',  references={}, typ=''):
     """Updates metadata for an image.
     
