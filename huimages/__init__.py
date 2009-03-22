@@ -35,6 +35,7 @@ import cgi
 import couchdb.client
 import datetime
 import hashlib
+import httplib2
 import md5
 import mimetypes
 import os
@@ -166,6 +167,14 @@ def imageurl(imageid, size='o'):
 def scaled_imageurl(imageid, size='square'):
     """Get the URL where a scaled version of the Image can be accessed."""
     return urlparse.urljoin(IMAGESERVER, os.path.join(_sizes.get(size, size), imageid)) + '.jpeg'
+    
+
+def scaled_imagedata(imageid, size='square'):
+    """Returns the datastram of a scaled image."""
+    url = scaled_imageurl(imageid, size)
+    http = httplib2.Http()
+    response, content = http.request(url, 'GET')
+    return content
     
 
 def scaled_dimensions(imageid, size='square'):
