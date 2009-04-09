@@ -129,7 +129,7 @@ def favorites(request, uid):
         for dummy in range(5):
             if ret:
                 imageid = ret.pop()
-                line.append(mark_safe('<a href="/images/image/%s/">%s</a>' % (imageid,
+                line.append(mark_safe('<a href="/i/image/%s/">%s</a>' % (imageid,
                             scaled_tag(imageid, "150x150!"))))
         lines.append(line)
     return render_to_response('imagebrowser/startpage.html', {'lines': lines, 'title': 'Ihre Favoriten'},
@@ -144,7 +144,7 @@ def by_tag(request, tagname):
         for dummy in range(5):
             if ret:
                 imageid = ret.pop()
-                line.append(mark_safe('<a href="/images/image/%s/">%s</a>' % (imageid,
+                line.append(mark_safe('<a href="/i/image/%s/">%s</a>' % (imageid,
                             scaled_tag(imageid, "150x150!"))))
         lines.append(line)
     return render_to_response('imagebrowser/startpage.html', {'lines': lines, 'title': 'Tag "%s"' % tagname},
