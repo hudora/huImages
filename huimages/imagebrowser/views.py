@@ -18,12 +18,13 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils.safestring import mark_safe
 from django.utils import simplejson
+from django.core.urlresolvers import reverse
 
 from huimages import *
 from imagebrowser.forms import UploadForm
 
 IMAGESERVER = "http://i.hdimg.net"
-COUCHSERVER = "http://couchdb.local.hudora.biz:5984"
+COUCHSERVER = "http://localhost:5984"
 COUCHDB_NAME = "huimages"
 
 
@@ -233,10 +234,9 @@ def upload(request):
         form = UploadForm(request.POST, request.FILES)
         if form.is_valid():
             image = request.FILES['image']
-            imageid = save_image(image.read())
+            imageid = save_image(image.read(), title=form.cleaned_data.get('title'))
             return HttpResponseRedirect(reverse('view-image', (), {'imageid': imageid}))
     else:
         form = UploadForm()
     return render_to_response('imagebrowser/upload.html', {'form': form},
                                 context_instance=RequestContext(request))
-    
