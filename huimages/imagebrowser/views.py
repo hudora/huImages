@@ -20,6 +20,7 @@ from django.utils.safestring import mark_safe
 from django.utils import simplejson
 
 from huimages import *
+from imagebrowser.forms import UploadForm
 
 IMAGESERVER = "http://i.hdimg.net"
 COUCHSERVER = "http://couchdb.local.hudora.biz:5984"
@@ -225,3 +226,17 @@ def update_title(request, imageid):
     set_title(imageid, request.POST['value'])
     response = HttpResponse(request.POST['value'], mimetype='text/plain')
     return response
+
+
+def upload(request):
+    if request.method == "POST":
+        form = UploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            image = request.FILES['image']
+            imageid = save_image(image.read())
+            return HttpResponseRedirect(reverse('view-image', (), {'imageid': imageid}))
+    else:
+        form = UploadForm()
+    return render_to_response('imagebrowser/upload.html', {'form': form},
+                                context_instance=RequestContext(request))
+    

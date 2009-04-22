@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+	"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title>image</title>
+    <link type="text/css" rel="stylesheet" href="http://s.hdimg.net/jquery/themes/default/default.css" />
+<style type="text/css">
+body {
+    margin-top: 0.5em;
+    background-color: #ffffff;
+    font-family: "helvetica"; 
+    color: #000000;
+}
+h1 { font-size: 3.8em; color: #000000;  }
+DIV.tagMatches {
+    margin-left: 10px;
+    width: 200px;
+}
+DIV.tagMatches SPAN {
+    padding: 2px;
+    margin-right: 4px;
+    background-color: #0000AB;
+    color: #fff;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+    <form enctype="multipart/form-data" method="post" action=".">
+        <table>
+        {{ form.as_table }}
+        </table>
+	<input type="submit" value="Upload"/>
+    </form>
+</body>
+</html>
