@@ -24,7 +24,7 @@ from huimages import *
 from imagebrowser.forms import UploadForm
 
 IMAGESERVER = "http://i.hdimg.net"
-COUCHSERVER = "http://localhost:5984"
+COUCHSERVER = "http://couchdb.local.hudora.biz:5984"
 COUCHDB_NAME = "huimages"
 
 
@@ -235,7 +235,7 @@ def upload(request):
         if form.is_valid():
             image = request.FILES['image']
             imageid = save_image(image.read(), title=form.cleaned_data.get('title'))
-            return HttpResponseRedirect(reverse('view-image', (), {'imageid': imageid}))
+            return HttpResponseRedirect(reverse('view-image', kwargs={'imageid': imageid}))
     else:
         form = UploadForm()
     return render_to_response('imagebrowser/upload.html', {'form': form},
