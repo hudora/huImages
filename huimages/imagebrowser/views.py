@@ -21,7 +21,7 @@ from django.utils import simplejson
 from django.core.urlresolvers import reverse
 
 from huimages import *
-from imagebrowser.forms import UploadForm
+from huimages.imagebrowser.forms import UploadForm
 
 IMAGESERVER = "http://i.hdimg.net"
 COUCHSERVER = "http://couchdb.local.hudora.biz:5984"
