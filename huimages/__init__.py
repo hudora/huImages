@@ -207,6 +207,8 @@ def scaled_tag(imageid, size='square', *args, **kwargs):
     ret.extend(args)
     for key, val in kwargs.items():
         ret.append('%s="%s"' % (cgi.escape(key, True), cgi.escape(val, True)))
+    if 'alt' not in kwargs:
+        ret.append('alt=""')
     ret.append('/>')
     return ' '.join(ret)
     
