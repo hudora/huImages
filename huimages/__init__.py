@@ -234,8 +234,7 @@ def get_previous_imageid(imageid):
 
 # Meta-Data related functionality
 
-
-def update_metadata(doc_id, timestamp=None, title='',  references={}, typ=''):
+def update_metadata(doc_id, timestamp=None, title='', references={}, typ=''):
     """Updates metadata for an image.
     
     timestamp should be a datetime object representing the creation time of the image or None.
@@ -267,6 +266,7 @@ def update_metadata(doc_id, timestamp=None, title='',  references={}, typ=''):
     db[doc_id] = doc
     return doc_id
     
+
 def set_title(imageid, newtitle):
     """Save an image title."""
     db = _setup_couchdb()
@@ -274,4 +274,3 @@ def set_title(imageid, newtitle):
     if newtitle and newtitle not in doc.get('title', []):
         doc.setdefault('title', []).append(newtitle)
     db[imageid] = doc
-
