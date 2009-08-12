@@ -36,7 +36,6 @@ import couchdb.client
 import datetime
 import hashlib
 import httplib2
-import md5
 import mimetypes
 import os
 import os.path
@@ -74,8 +73,8 @@ def _setup_couchdb():
         return server.create(COUCHDB_NAME)
     
 
-def save_image(imagedata, contenttype=None, timestamp=None, title='', 
-               references={}, filename='image.jpeg', typ=''):  
+def save_image(imagedata, contenttype=None, timestamp=None, title='',
+               references=None, filename='image.jpeg', typ=''):
     """Stores an Image in the database. Returns the image ID for further image access.
     
     contenttype should be the Mime-Type of the image or None. If not given the library tries to
@@ -91,6 +90,7 @@ def save_image(imagedata, contenttype=None, timestamp=None, title='',
     
     typ can be the type of the image. So far only 'product_image' is used.
     """
+    
     db = _setup_couchdb()
     doc_id = "%s01" % base64.b32encode(hashlib.sha1(imagedata).digest()).rstrip('=')
     
@@ -108,9 +108,10 @@ def save_image(imagedata, contenttype=None, timestamp=None, title='',
     doc['mtime'] = timestamp
     if typ and (typ not in doc.get('types', [])):
         doc.setdefault('types', []).append(typ)
-    for key, value in references.items():
-        if value not in doc.get('references', {}).get(key, []):
-            doc.setdefault('references', {}).setdefault(key, []).append(value)
+    if references:
+        for key, value in references.items():
+            if value not in doc.get('references', {}).get(key, []):
+                doc.setdefault('references', {}).setdefault(key, []).append(value)
     if title and title not in doc.get('title', []):
         doc.setdefault('title', []).append(title)
     img = Image.open(StringIO(imagedata))
@@ -234,7 +235,7 @@ def get_previous_imageid(imageid):
 
 # Meta-Data related functionality
 
-def update_metadata(doc_id, timestamp=None, title='', references={}, typ=''):
+def update_metadata(doc_id, timestamp=None, title='', references=None, typ=''):
     """Updates metadata for an image.
     
     timestamp should be a datetime object representing the creation time of the image or None.
@@ -259,9 +260,10 @@ def update_metadata(doc_id, timestamp=None, title='', references={}, typ=''):
     if title and title not in doc.get('title', []):
         doc.setdefault('title', []).append(title)
     
-    for key, value in references.items():
-        if value not in doc.get('references', {}).get(key, []):
-            doc.setdefault('references', {}).setdefault(key, []).append(value)
+    if references:
+        for key, value in references.items():
+            if value not in doc.get('references', {}).get(key, []):
+                doc.setdefault('references', {}).setdefault(key, []).append(value)
     
     db[doc_id] = doc
     return doc_id

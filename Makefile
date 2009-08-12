@@ -1,11 +1,15 @@
 # setting the PATH seems only to work in GNUmake not in BSDmake
 PATH := ./testenv/bin:$(PATH)
 
-default: dependencies check statistics
+default: dependencies check
 
-check: clean
+hudson: dependencies check statistics
 	find huimages -name '*.py' | xargs /usr/local/hudorakit/bin/hd_pep8
 	/usr/local/hudorakit/bin/hd_pylint -f parseable huimages | tee pylint.out
+
+check:
+	find huimages -name '*.py' | xargs /usr/local/hudorakit/bin/hd_pep8
+	/usr/local/hudorakit/bin/hd_pylint huimages
 
 dependencies:
 	virtualenv testenv
@@ -15,7 +19,7 @@ build:
 	python setup.py build sdist bdist_egg
 
 statistics:
-	sloccount --wide --details huimages | tee sloccount.sc
+	sloccount --wide --details huimages > sloccount.sc
 	
 
 upload: build

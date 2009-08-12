@@ -1,3 +1,4 @@
 couchdb
 huTools
 PIL
+httplib2
