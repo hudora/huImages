@@ -31,7 +31,7 @@ COUCHDB_NAME = "huimages"
 def get_rating(imageid):
     server = couchdb.client.Server(COUCHSERVER)
     db = server[COUCHDB_NAME+'_meta']
-    ret = [x.value for x in db.view('ratings/all', group=True, startkey=imageid, limit=1) if x.key == imageid]
+    ret = [x.value for x in db.view('ratings/all', startkey=imageid, limit=1) if x.key == imageid]
     if ret:
         votecount = ret[0][0]
         return votecount, float(ret[0][1])/votecount

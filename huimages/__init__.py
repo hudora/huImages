@@ -218,7 +218,7 @@ def get_random_imageid():
     """Returns a random (valid) ImageID."""
     db = _setup_couchdb()
     startkey = base64.b32encode(hashlib.sha1(str(random.random())).digest()).rstrip('=')
-    return [x.id for x in db.view('all/without_deleted', startkey=startkey, limit=1)][0]
+    return [x.id for x in db.view('all/without_deleted_and_automatic', startkey=startkey, limit=1)][0]
     
 
 def get_next_imageid(imageid):
@@ -247,7 +247,7 @@ def update_metadata(doc_id, timestamp=None, title='', references=None, typ=''):
     typ can be the type of the image. So far only 'product_image' is used.
     """
     db = _setup_couchdb()
-    doc = get_imagedoc(doc_id)
+    doc = db[doc_id]
     
     if timestamp:
         timestamp = _datetime2str(datetime.datetime.now())
