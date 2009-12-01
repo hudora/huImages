@@ -94,7 +94,6 @@ def get_favorites(uid):
 
 # ****************************
 
-
 def startpage(request):
     
     def get_line():
@@ -188,28 +187,29 @@ def tag_suggestion(request, imageid):
     tagcount.sort(key = itemgetter(1), reverse=True)
     json = simplejson.dumps([x[0] for x in tagcount if x[0].startswith(prefix)])
     response = HttpResponse(json, mimetype='application/json')
-    return response
-    
+    return response    
 
 # AJAX bookmarking
+
 def favorite(request, imageid):
     if request.POST['rating'] == '1':
         update_user_metadata(imageid, request.clienttrack_uid, {'favorite': True})
     else:
         update_user_metadata(imageid, request.clienttrack_uid, {'favorite': False})
     return HttpResponse('ok', mimetype='application/json')
-    
+
 
 # AJAX rating
+
 def rate(request, imageid):
     update_user_metadata(imageid, request.clienttrack_uid, {'rating': int(request.POST['rating'])})
     votecount, rating = get_rating(imageid)
     json = simplejson.dumps(rating)
     response = HttpResponse(json, mimetype='application/json')
-    return response
-    
+    return response    
 
 # AJAX tagging
+
 def tag(request, imageid):
     newtags = request.POST['newtag'].lower().replace(',', ' ').split(' ')
     newtags = [x.strip() for x in newtags if x.strip()]
@@ -220,9 +220,9 @@ def tag(request, imageid):
     json = simplejson.dumps(newtags)
     response = HttpResponse(json, mimetype='application/json')
     return response
-    
 
 # AJAX titeling
+
 def update_title(request, imageid):
     set_title(imageid, request.POST['value'])
     response = HttpResponse(request.POST['value'], mimetype='text/plain')
@@ -238,5 +238,5 @@ def upload(request):
             return HttpResponseRedirect(reverse('view-image', kwargs={'imageid': imageid}))
     else:
         form = UploadForm()
-    return render_to_response('imagebrowser/upload.html', {'form': form, 'title' : 'Bilder Upload'},
+    return render_to_response('imagebrowser/upload.html', {'form': form, 'title': 'Bilder Upload'},
                                 context_instance=RequestContext(request))

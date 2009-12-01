@@ -16,7 +16,6 @@ COUCHSERVER = "http://couchdb.local.hudora.biz:5984"
 COUCHDB_NAME = "huimages"
 # I'm totally out of ideas how to switch between production and test environments
 
-
 def _scale_image(width, height, image):
     """
     This function will scale an image to a given bounding box. Image
@@ -38,6 +37,7 @@ def _scale_image(width, height, image):
         lfactor = float(height) / float(ysize)
     res = image.resize((int(float(xsize) * lfactor), int(float(ysize) * lfactor)), Image.ANTIALIAS)
     return res
+
 
 def _crop_image(width, height, image):
     """
@@ -76,11 +76,13 @@ CACHEDIR = './cache'
 typ_re = re.compile('^(o|\d+x\d+!?)$')
 docid_re = re.compile('^[A-Z0-9]+$')
 
+
 def mark_broken(doc_id):
     db = couchdb.client.Server(COUCHSERVER)[COUCHDB_NAME]
     doc = db[doc_id]
     doc['deleted'] = True
     db[doc_id] = doc
+
 
 def imagserver(environ, start_response):
     parts = environ.get('PATH_INFO', '').split('/')
