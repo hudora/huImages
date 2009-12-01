@@ -1,10 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
-	"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+{% extends "intern/base_site.html" %}
+{% block extrahead %}
 
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
-<head>
-    <title>image</title>
     <link type="text/css" rel="stylesheet" href="http://s.hdimg.net/jquery/themes/default/default.css" />
     <script type="text/javascript" src="http://s.hdimg.net/jquery/jquery-1.3.1.min.js"></script>
     <script type="text/javascript" src="http://s.hdimg.net/jquery/forms-2.18.js"></script>
@@ -14,12 +10,13 @@
     <link rel="stylesheet" type="text/css" href="http://s.hdimg.net/jquery/rater.css" media="screen" />
 <style type="text/css">
 body {
-    margin-top: 0.5em;
     background-color: #ffffff;
-    font-family: "helvetica"; 
-    color: #000000;
+    font-family: "Lucida Grande","DejaVu Sans","Bitstream Vera Sans",Verdana,Arial,sans-serif; 
+    color: #333333;
+	font-size:12 px;
+    text-align:left;
 }
-h1 { font-size: 3.8em; color: #000000;  }
+
 DIV.tagMatches {
     margin-left: 10px;
     width: 200px;
@@ -32,13 +29,22 @@ DIV.tagMatches SPAN {
     cursor: pointer;
 }
 </style>
-</head>
-
-<body>
-    <div id="favorite" style="float: right" ></div>
+{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="/">Homepage</a>
+&rsaquo; <a href="/i/">HUDORA Bilderarchiv</a>
+&rsaquo; {{ title }}</div>{% endblock %}
+<br>
+  {% block content %}
+    <div id="favorite"></div><br><br>
+	Zum ändern des Namens bitte auf die Bezeichnung klicken.
     <h1 class="edit" id="title">{{ title }}</h1>
-
-    <div id ="rightcolumn"  style="float: right">
+	<br>
+	
+	<div style="float:left;">
+    {{ imagetag }}
+    </div>
+    
+<div id ="rightcolumn"  style="float:left; margin-left:20px;">
         <div>
         {{ previous }}
         {{ next }}
@@ -54,7 +60,7 @@ DIV.tagMatches SPAN {
             <div id="rating"></div>
         </div>
         
-        <div id="tagarea" style="float: right">
+        <div id="tagarea" style="">
             <ul id="tags">
                 {% for tag in tags %}
                     <li><a href="/images/tag/{{ tag }}/">{{ tag }}</a></li>
@@ -70,10 +76,8 @@ DIV.tagMatches SPAN {
             </form>
         </div>
     </div>
-    
-    {{ imagetag }}
-    
-</body>
+
+
 <script type="text/javascript"> 
     // wait for the DOM to be loaded 
     $(document).ready(function() { 
@@ -118,4 +122,4 @@ DIV.tagMatches SPAN {
         });
     }); 
 </script> 
-</html>
+{% endblock %}

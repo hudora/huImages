@@ -238,5 +238,5 @@ def upload(request):
             return HttpResponseRedirect(reverse('view-image', kwargs={'imageid': imageid}))
     else:
         form = UploadForm()
-    return render_to_response('imagebrowser/upload.html', {'form': form},
+    return render_to_response('imagebrowser/upload.html', {'form': form, 'title' : 'Bilder Upload'},
                                 context_instance=RequestContext(request))
