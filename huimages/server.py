@@ -23,6 +23,7 @@ COUCHSERVER = "http://couchdb.local.hudora.biz:5984"
 COUCHDB_NAME = "huimages"
 # I'm totally out of ideas how to switch between production and test environments
 
+
 def _scale_image(width, height, image):
     """
     This function will scale an image to a given bounding box. Image

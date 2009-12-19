@@ -2,3 +2,4 @@ couchdb
 huTools
 PIL
 httplib2
+boto
