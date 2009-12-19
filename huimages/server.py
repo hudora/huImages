@@ -195,10 +195,12 @@ def _get_original_file(doc_id):
     #s3bucket = conn.create_bucket('originals.i.hdimg.net', location=boto.s3.connection.Location.EU)
     s3bucket = conn.get_bucket('originals.i.hdimg.net')
     #s3bucket.set_acl('public-read')
-    k = boto.s3.key.Key(s3bucket)
-    k.key = "%s.jpeg" % doc_id 
-    ret = k.set_contents_from_filename(cachefilename) 
-    k.set_acl('public-read')
+    k = bucket.get_key('ZS2BOK3E4AFLX5LSITRZIFYABLMA4UYV01.jpeg')
+    if not k:
+        k = boto.s3.key.Key(s3bucket)
+        k.key = doc_id 
+        k.set_contents_from_filename(cachefilename)
+         k.make_public()
     
     return open(cachefilename)
 
