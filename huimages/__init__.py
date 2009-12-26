@@ -173,16 +173,16 @@ def _scale(want_width, want_height, is_width, is_height):
     """
     # from http://simon.bofh.ms/cgi-bin/trac-django-projects.cgi/file/stuff/branches/magic-removal/image.py
     lfactor = 1    
-    width, height = int(want_width), int(want_width)
-    if is_width > width and is_height > height:
-        lfactorx = float(width) / float(is_width)
-        lfactory = float(height) / float(is_height)
+    want_width, want_height = int(want_width), int(want_height)
+    if is_width > want_width and is_height > want_height:
+        lfactorx = float(want_width) / float(is_width)
+        lfactory = float(want_height) / float(is_height)
         lfactor = min(lfactorx, lfactory)
-    elif is_width > width:
-        lfactor = float(width) / float(is_width)
-    elif is_height > height:
-        lfactor = float(height) / float(is_height)
-    return (int(float(width) * lfactor), int(float(height) * lfactor))
+    elif is_width > want_width:
+        lfactor = float(want_width) / float(is_width)
+    elif is_height > want_height:
+        lfactor = float(want_height) / float(is_height)
+    return (int(float(is_width) * lfactor), int(float(is_height) * lfactor))
     
 
 def imageurl(imageid, size='o'):
@@ -213,8 +213,9 @@ def scaled_dimensions(imageid, size='square'):
     try:
         db = _setup_couchdb()
         doc = db[imageid]
-        return _scale(width, height, doc.width, doc.height)
+        return _scale(width, height, doc['width'], doc['height'])
     except:
+        raise
         return (None, None)
     
 
