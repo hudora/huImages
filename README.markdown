@@ -66,11 +66,49 @@ If the image is requested again, it is served directly from the filesystem by
 lighttpd without ever hitting the Python based `server.py`.
 
 If you are short on diskspace fou can expire files from the cache directory
-by just removint the oldest file until you have enough space again.
+by just removing the oldest file until you have enough space again.
 
+
+# Installation
+
+We will show installation on a Ubuntu 9.10 based [Amazon EC2][8] instance.
+huImages should qork on every POSIX system but requores a recent CouchDB
+version. I assume you have an [EC2 environment up and running][9] and your
+EC2-SSH key is named "ssh-ec2" and located in the current directory.
+
+[8]: http://aws.amazon.com/ec2/
+[9]: http://onlamp.com/onlamp/2008/05/13/creating-applications-with-amazon-ec2-and-s3.html
+
+
+    INSTANCE=`ec2-run-instances ami-a62a01d2 --key ssh-ec2 | cut -f 2 | tail -n1`
+    IP=`ec2-describe-instances $INSTANCE | cut -f 17 | tail -n1`
+    ssh -i ssh-ec2 ubuntu@$IP
+
+You now should be loggent into the new Amazon Instance
+
+    sudo apt-get update -y
+    sudo apt-get install -y couchdb lighttpd git-core
+    sudo apt-get install -y python-pip python-boto python-imaging 
+    sudo apt-get install -y python-couchdb python-flup 
+
+    git clone http://github.com:hudora/huImages.git
+    sudo mv huImages /usr/local/huImages
+    cd /usr/local/huImages
+    sudo cp examples/lighttpd.conf /etc/lighttpd/lighttpd.conf
+    sudo /etc/init.d/lighttpd restart
+
+    sudo mkdir /mnt/huimages-cache
+    sudo ln -s /mnt/huimages-cache /usr/local/huImages/cache
+
+    sudo chown /mnt/huimages-cache /usr/local/huImages/cache
+    curl -X PUT http://127.0.0.1:5984/huimages
+    curl -X PUT http://127.0.0.1:5984/huimages_meta
 
 
 # Further Reading
 
- * http://blogs.23.nu/disLEXia/2009/02/imageserver/ (in german)
- * http://code.google.com/p/django-photologue/ (somewhat similar application)
+ * [Blogpost about image Serving][10] (in german)
+ * [django-photologue][11] - somewhat similar application
+
+[10]: http://blogs.23.nu/disLEXia/2009/02/imageserver/
+[11]: http://code.google.com/p/django-photologue/
