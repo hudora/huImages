@@ -3,45 +3,11 @@
 
 """Serving of Images from CouchDB or Amazon S3 with scaling.
 
-Is meant to run with lighttpd for fast serving and chache friendly locking.
- /usr/local/etc/lighttpd.conf should look like this:
+Is meant to run with lighttpd for fast serving and cache friendly locking.
+/etc/lighttpd/lighttpd.conf should look like examples/lighttpd.conf
 
-----------------------------------------------------------------------------
-server.modules  = ("mod_access", "mod_status", "mod_fastcgi",  "mod_expire",
-                                "mod_accesslog" )
-
-server.document-root        = "/usr/local/huimages/cache/"
-accesslog.filename          = "/var/log/lighttpd.access.log"
-server.errorlog             = "/var/log/lighttpd.error.log"
-server.event-handler        = "freebsd-kqueue" # needed on OS X
-dir-listing.activate        = "disable"
-server.error-handler-404    = "/generate"
-server.pid-file             = "/var/run/lighttpd.pid"
-server.username             = "www"
-server.groupname            = "www"
-expire.url                  = ( "" => "access 6 months" )
-static-file.etags           = "disable"
-
-# mimetype mapping
-mimetype.assign = (".gif" => "image/gif", ".png" => "image/png",
-  # default mime type
-  ""              =>      "image/jpeg",
- )
-
-fastcgi.server = ("/generate" => ("imageserver"  => ("socket" => "/tmp/fastcgi.socket",
-         "bin-path" => "/usr/local/huimages/server.py",
-         "bin-environment" => ("AWS_ACCESS_KEY_ID" => "...",
-                                "AWS_SECRET_ACCESS_KEY" => "..."),
-         "check-local" => "disable", # activate fallback to FastCGI script
-         "min-procs" => 4,
-         "max-procs" => 12,
-         "idle-timeout" => 300,
-         "allow-x-send-file" => "enable",
-    ))
-)
-----------------------------------------------------------------------------
-
-If you start getting low on disk space. delete the oldest files in /usr/local/huimages/cache/
+If you start getting low on disk space. delete the oldest files in
+/usr/local/huimages/cache/
 """
 
 # Created 2006, 2009 by Maximillian Dornseif. Consider it BSD licensed.
@@ -63,7 +29,7 @@ from flup.server.fcgi_fork import WSGIServer
 # export AWS_SECRET_ACCESS_KEY='hal6...7'
 
 COUCHSERVER = os.environ.get('COUCHSERVER', 'http://127.0.0.1:5984')
-S3BUCKET = os.environ.get('S3BUCKET', 'originals.i.hdimg.net')
+S3BUCKET = os.environ['S3BUCKET']
 COUCHDB_NAME = "huimages"
 CACHEDIR = os.path.abspath('../cache')
 typ_re = re.compile('^(o|\d+x\d+!?)$')
@@ -77,8 +43,9 @@ def _scale_image(width, height, image):
     at two sides of the image if the ratio isn't identical to that of
     the bounding box.
     """
-    #from http://simon.bofh.ms/cgi-bin/trac-django-projects.cgi/file/stuff/branches/magic-removal/image.py
-    lfactor = 1    
+    # originally from
+    # http://simon.bofh.ms/cgi-bin/trac-django-projects.cgi/file/stuff/branches/magic-removal/image.py
+    lfactor = 1
     width, height = int(width), int(height)
     (xsize, ysize) = image.size
     if xsize > width and ysize > height:
@@ -100,8 +67,8 @@ def _crop_image(width, height, image):
     blank space will be in the thumbnail, but the image isn't fully
     visible due to croping.
     """
-    #from http://simon.bofh.ms/cgi-bin/trac-django-projects.cgi/file/stuff/branches/magic-removal/image.py
-    # moderately modified
+    # origially from
+    # http://simon.bofh.ms/cgi-bin/trac-django-projects.cgi/file/stuff/branches/magic-removal/image.py
     width, height = int(width), int(height)
     lfactor = 1
     (xsize, ysize) = image.size
@@ -139,15 +106,15 @@ def imagserver(environ, start_response):
     parts = environ.get('PATH_INFO', '').split('/')
     if len(parts) != 3:
         start_response('404 Not Found', [('Content-Type', 'text/plain')])
-        return ["File not found"]
+        return ["File not found\n"]
     typ, doc_id = parts[1:]
     doc_id = doc_id.strip('jpeg.')
     if not typ_re.match(typ):
         start_response('501 Error', [('Content-Type', 'text/plain')])
-        return ["Not Implemented"]
+        return ["Not Implemented\n"]
     if not docid_re.match(doc_id):
         start_response('501 Error', [('Content-Type', 'text/plain')])
-        return ["Not Implemented"]
+        return ["Not Implemented\n"]
     
     if not os.path.exists(os.path.join(CACHEDIR, typ)):
         os.makedirs(os.path.join(CACHEDIR, typ))
@@ -190,6 +157,7 @@ def imagserver(environ, start_response):
         tempfilename = tempfile.mktemp(prefix='tmp_%s_%s' % (typ, doc_id), dir=CACHEDIR)
         img.save(tempfilename, "JPEG")
         os.rename(tempfilename, cachefilename)
+        # using X-Sendfile could speed this up.
         imagefile = open(cachefilename)
     
     start_response('200 OK', [('Content-Type', 'image/jpeg'),

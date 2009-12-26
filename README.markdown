@@ -69,7 +69,7 @@ If you are short on diskspace fou can expire files from the cache directory
 by just removing the oldest file until you have enough space again.
 
 
-# Installation
+# Server Installation
 
 We will show installation on a Ubuntu 9.10 based [Amazon EC2][8] instance.
 huImages should qork on every POSIX system but requores a recent CouchDB
@@ -77,38 +77,49 @@ version. I assume you have an [EC2 environment up and running][9] and your
 EC2-SSH key is named "ssh-ec2" and located in the current directory.
 
 [8]: http://aws.amazon.com/ec2/
-[9]: http://onlamp.com/onlamp/2008/05/13/creating-applications-with-amazon-ec2-and-s3.html
+[9]: https://help.ubuntu.com/community/EC2StartersGuide
 
 
-    INSTANCE=`ec2-run-instances ami-a62a01d2 --key ssh-ec2 | cut -f 2 | tail -n1`
+    INSTANCE=`ec2-run-instances ami-a62a01d2 --key ssh-ec2 --region eu-west-1 | cut -f2 | tail -n1`
+    sleep 60
     IP=`ec2-describe-instances $INSTANCE | cut -f 17 | tail -n1`
     ssh -i ssh-ec2 ubuntu@$IP
 
-You now should be loggent into the new Amazon Instance
+You now should be logged into the new Amazon instance
 
     sudo apt-get update -y
     sudo apt-get install -y couchdb lighttpd git-core
-    sudo apt-get install -y python-pip python-boto python-imaging 
-    sudo apt-get install -y python-couchdb python-flup 
+    sudo apt-get install -y python-pip python-boto python-imaging
+    sudo apt-get install -y python-couchdb python-flup
 
-    git clone http://github.com:hudora/huImages.git
+    git clone git@github.com:hudora/huImages.git store-images-in-ec2
     sudo mv huImages /usr/local/huImages
     cd /usr/local/huImages
-    sudo cp examples/lighttpd.conf /etc/lighttpd/lighttpd.conf
-    sudo /etc/init.d/lighttpd restart
-
     sudo mkdir /mnt/huimages-cache
     sudo ln -s /mnt/huimages-cache /usr/local/huImages/cache
+    sudo cp examples/lighttpd.conf /etc/lighttpd/lighttpd.conf
+    sudo vi /etc/lighttpd/lighttpd.conf
 
-    sudo chown /mnt/huimages-cache /usr/local/huImages/cache
+Change `%%AWS_ACCESS_KEY_ID%%`, `%%AWS_SECRET_ACCESS_KEY%%` and `%%S3BUCKET%%`
+to the appropriate values.
+
+    sudo /etc/init.d/lighttpd restart
+    sudo chown www-data.www-data /mnt/huimages-cache /usr/local/huImages/cache
     curl -X PUT http://127.0.0.1:5984/huimages
     curl -X PUT http://127.0.0.1:5984/huimages_meta
 
+# Client usge
+
+Now you can start putting images into the Database. If you don't run on the
+same Server, you must find a wy to make CouchDB accessible to the client.
+[Running a CouchDB cluster on Amazon EC2][10] might be a good startingpoint.
+
+[10]: http://blogs.23.nu/c0re/2009/12/running-a-couchdb-cluster-on-amazon-ec2/
 
 # Further Reading
 
- * [Blogpost about image Serving][10] (in german)
- * [django-photologue][11] - somewhat similar application
+ * [Blogpost about image Serving][11] (in german)
+ * [django-photologue][12] - somewhat similar application
 
-[10]: http://blogs.23.nu/disLEXia/2009/02/imageserver/
-[11]: http://code.google.com/p/django-photologue/
+[11]: http://blogs.23.nu/disLEXia/2009/02/imageserver/
+[12]: http://code.google.com/p/django-photologue/
