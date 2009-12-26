@@ -191,12 +191,12 @@ def imageurl(imageid, size='o'):
     return urlparse.urljoin(IMAGESERVERURL, os.path.join(size, imageid)) + '.jpeg'
     
 
-def scaled_imageurl(imageid, size='square'):
+def scaled_imageurl(imageid, size='150x150'):
     """Get the URL where a scaled version of the Image can be accessed."""
     return urlparse.urljoin(IMAGESERVERURL, os.path.join(_sizes.get(size, size), imageid)) + '.jpeg'
     
 
-def scaled_imagedata(imageid, size='square'):
+def scaled_imagedata(imageid, size='150x150'):
     """Returns the datastram of a scaled image."""
     url = scaled_imageurl(imageid, size)
     http = httplib2.Http()
@@ -204,7 +204,7 @@ def scaled_imagedata(imageid, size='square'):
     return content
     
 
-def scaled_dimensions(imageid, size='square'):
+def scaled_dimensions(imageid, size='150x150'):
     """Returns the dimensions of an image after scaling."""
     size = _sizes.get(size, size)
     width, height = size.split('x')
@@ -219,7 +219,7 @@ def scaled_dimensions(imageid, size='square'):
         return (None, None)
     
 
-def scaled_tag(imageid, size='square', *args, **kwargs):
+def scaled_tag(imageid, size='150x150', *args, **kwargs):
     """Creates an XHTML tag for an Image scaled to <size>.
     
     Additional keyword arguments are added as attributes to  the <img> tag.
