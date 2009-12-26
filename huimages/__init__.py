@@ -24,20 +24,6 @@ Created by Maximillian Dornseif on 2009-01-29.
 Copyright (c) 2009 HUDORA. All rights reserved.
 """
 
-# This tool needs keeys being set at the shell:
-# export AWS_ACCESS_KEY_ID='AKIRA...Z'
-# export AWS_SECRET_ACCESS_KEY='hal6...7'
-
-COUCHSERVER = os.environ.get('COUCHSERVER', 'http://127.0.0.1:5984')
-COUCHDB_NAME = "huimages"
-# Amazon S3 Bucket where you are storing the original images
-S3BUCKET = os.environ['S3BUCKET']
-# Your Amazon access credentials
-AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
-AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
-# where server.py is running
-IMAGESERVERURL = os.environ.get('IMAGESERVERURL', 'http://i.hdimg.net/')
-
 import Image 
 import base64
 import boto
@@ -56,6 +42,17 @@ import time
 import urlparse
 from cStringIO import StringIO
 from operator import itemgetter
+
+COUCHSERVER = os.environ.get('COUCHSERVER', 'http://127.0.0.1:5984')
+COUCHDB_NAME = "huimages"
+# Amazon S3 Bucket where you are storing the original images
+S3BUCKET = os.environ['S3BUCKET']
+# Your Amazon access credentials
+AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
+AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
+# where server.py is running
+IMAGESERVERURL = os.environ.get('IMAGESERVERURL', 'http://i.hdimg.net/')
+
 
 _sizes = {'mini': "23x40",
           'thumb': "50x200", 
@@ -112,6 +109,8 @@ def save_image(imagedata, contenttype=None, timestamp=None, title='',
     
     if not contenttype:
         contenttype = mimetypes.guess_type(filename)
+        if len(contenttype) == 2:
+            contenttype = contenttype[0]
     if not timestamp:
         timestamp = _datetime2str(datetime.datetime.now())
     if not 'ctime' in doc:
@@ -134,15 +133,15 @@ def save_image(imagedata, contenttype=None, timestamp=None, title='',
     
     # Push data into S3 if needed
     conn = boto.connect_s3()
-    bucket = conn.get_bucket('originals.i.hdimg.net')
-    k = bucket.get_key('ZS2BOK3E4AFLX5LSITRZIFYABLMA4UYV01.jpeg')
+    s3bucket = conn.get_bucket('originals.i.hdimg.net')
+    k = s3bucket.get_key(doc_id)
     if not k:
         headers = {}
         headers['Content-Type'] = contenttype
         k = boto.s3.key.Key(s3bucket)
         k.key = doc_id 
         k.set_metadata('width', str(doc['width']))
-        k.set_metadata('height', doc['height'])
+        k.set_metadata('height', str(doc['height']))
         k.set_contents_from_string(imagedata, headers, replace=True)
         k.make_public()
     
@@ -174,16 +173,16 @@ def _scale(want_width, want_height, is_width, is_height):
     """
     # from http://simon.bofh.ms/cgi-bin/trac-django-projects.cgi/file/stuff/branches/magic-removal/image.py
     lfactor = 1    
-    width, height = int(want_width), int(want_width)
-    if is_width > width and is_height > height:
-        lfactorx = float(width) / float(is_width)
-        lfactory = float(height) / float(is_height)
+    want_width, want_height = int(want_width), int(want_height)
+    if is_width > want_width and is_height > want_height:
+        lfactorx = float(want_width) / float(is_width)
+        lfactory = float(want_height) / float(is_height)
         lfactor = min(lfactorx, lfactory)
-    elif is_width > width:
-        lfactor = float(width) / float(is_width)
-    elif is_height > height:
-        lfactor = float(height) / float(is_height)
-    return (int(float(width) * lfactor), int(float(height) * lfactor))
+    elif is_width > want_width:
+        lfactor = float(want_width) / float(is_width)
+    elif is_height > want_height:
+        lfactor = float(want_height) / float(is_height)
+    return (int(float(is_width) * lfactor), int(float(is_height) * lfactor))
     
 
 def imageurl(imageid, size='o'):
@@ -214,8 +213,9 @@ def scaled_dimensions(imageid, size='150x150'):
     try:
         db = _setup_couchdb()
         doc = db[imageid]
-        return _scale(width, height, doc.width, doc.height)
+        return _scale(width, height, doc['width'], doc['height'])
     except:
+        raise
         return (None, None)
     
 

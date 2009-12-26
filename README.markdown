@@ -149,8 +149,8 @@ values:
 
 # Further Reading
 
- * [Blogpost about image Serving][10] (in german)
- * [django-photologue][11] - somewhat similar application
+ * [Blogpost about image Serving][11] (in german)
+ * [django-photologue][12] - somewhat similar application
 
-[10]: http://blogs.23.nu/disLEXia/2009/02/imageserver/
-[11]: http://code.google.com/p/django-photologue/
+[11]: http://blogs.23.nu/disLEXia/2009/02/imageserver/
+[12]: http://code.google.com/p/django-photologue/
