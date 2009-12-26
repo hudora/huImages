@@ -69,7 +69,7 @@ If you are short on diskspace fou can expire files from the cache directory
 by just removing the oldest file until you have enough space again.
 
 
-# Installation
+# Server Installation
 
 We will show installation on a Ubuntu 9.10 based [Amazon EC2][8] instance.
 huImages should qork on every POSIX system but requores a recent CouchDB
@@ -108,7 +108,15 @@ to the appropriate values.
     curl -X PUT http://127.0.0.1:5984/huimages
     curl -X PUT http://127.0.0.1:5984/huimages_meta
 
-Now you can start putting images into the Database.
+# Client usge
+
+Now you can start putting images into the Database. If you don't run on the
+same Server, you must find a wy to make CouchDB accessible to the client.
+[Running a CouchDB cluster on Amazon EC2][10] might be a good startingpoint.
+
+[10]: http://blogs.23.nu/c0re/2009/12/running-a-couchdb-cluster-on-amazon-ec2/
+
+
 
 # Further Reading
 
