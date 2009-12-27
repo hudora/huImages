@@ -25,12 +25,19 @@ Created by Maximillian Dornseif on 2009-01-29.
 Copyright (c) 2009 HUDORA. All rights reserved.
 """
 
+# This tool needs keeys being set at the shell:
+# export AWS_ACCESS_KEY_ID='AKIRA...Z'
+# export AWS_SECRET_ACCESS_KEY='hal6...7'
+
 IMAGESERVER = "http://i.hdimg.net"                   # where server.py is running
 COUCHSERVER = "http://couchdb.local.hudora.biz:5984" # where CouchDB is running
 COUCHDB_NAME = "huimages"                            # CouchDB database to use
 
 import Image 
 import base64
+import boto
+import boto.s3.connection
+import boto.s3.key
 import cgi
 import couchdb.client
 import datetime
@@ -92,6 +99,7 @@ def save_image(imagedata, contenttype=None, timestamp=None, title='',
     """
     
     db = _setup_couchdb()
+    # the '01' postfix can later used to idnetify the cluster the image is stored on
     doc_id = "%s01" % base64.b32encode(hashlib.sha1(imagedata).digest()).rstrip('=')
     
     try:
@@ -100,7 +108,7 @@ def save_image(imagedata, contenttype=None, timestamp=None, title='',
         doc = {}
     
     if not contenttype:
-        contenttype = mimetypes.guess_type(filename)    
+        contenttype = mimetypes.guess_type(filename)
     if not timestamp:
         timestamp = _datetime2str(datetime.datetime.now())
     if not 'ctime' in doc:
@@ -120,6 +128,21 @@ def save_image(imagedata, contenttype=None, timestamp=None, title='',
     db[doc_id] = doc
     if not (doc.get('_attachments')):
         db.put_attachment(db[doc_id], imagedata, filename)
+    
+    # Push data into S3 if needed
+    conn = boto.connect_s3()
+    bucket = conn.get_bucket('originals.i.hdimg.net')
+    k = bucket.get_key('ZS2BOK3E4AFLX5LSITRZIFYABLMA4UYV01.jpeg')
+    if not k:
+        headers = {}
+        headers['Content-Type'] = contenttype
+        k = boto.s3.key.Key(s3bucket)
+        k.key = doc_id 
+        k.set_metadata('width', str(doc['width']))
+        k.set_metadata('height', doc['height'])
+        k.set_contents_from_string(imagedata, headers, replace=True)
+        k.make_public()
+    
     return doc_id
     
 
