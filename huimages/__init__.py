@@ -5,19 +5,18 @@ imageserver/__init__.py
 
 Store images in couchdb and access them via a separate server.
 
-You are expect to dump images via save_image(), get an ID back and furter on only use
-the ID to access the image. You can get the URL of the Image via imageurl(ID) and
-scaled_imageurl(ID). You can get a complete XHTML <img> tag via scaled_tag(ID).
-    
-This module uses the concept of "sizes". A size might be a predefined string
-like "thumb" or "svga" or a numeric specification like "240x160". If the numeric
-specification ends with "!" (like in "75x75!") the image is scaled and cropped
-to be EXACTLY of that size. IF not the image keeps it aspect ratio.
+You are expect to dump images via save_image(), get an ID back and furter on
+only use the ID to access the image. You can get the URL of the Image via
+imageurl(ID) and scaled_imageurl(ID). You can get a complete XHTML <img> tag
+via scaled_tag(ID).
 
-See imageserver._sizes for the list of predefined sizes.
+This module uses the concept of "sizes". A size is a numeric specification
+like "240x160". If the numeric specification ends with "!" (like in "75x75!")
+the image is scaled and cropped to be EXACTLY of that size. IF not the image
+keeps it aspect ratio.
 
-You can use get_random_imageid(), get_next_imageid(ID) and get_previous_imageid(ID)
-to implement image browsing.
+You can use get_random_imageid(), get_next_imageid(ID) and
+get_previous_imageid(ID) to implement image browsing.
 
 server.py implements the actual serving of image data.
 
@@ -29,9 +28,15 @@ Copyright (c) 2009 HUDORA. All rights reserved.
 # export AWS_ACCESS_KEY_ID='AKIRA...Z'
 # export AWS_SECRET_ACCESS_KEY='hal6...7'
 
-IMAGESERVER = "http://i.hdimg.net"                   # where server.py is running
-COUCHSERVER = "http://couchdb.local.hudora.biz:5984" # where CouchDB is running
-COUCHDB_NAME = "huimages"                            # CouchDB database to use
+COUCHSERVER = os.environ.get('COUCHSERVER', 'http://127.0.0.1:5984')
+COUCHDB_NAME = "huimages"
+# Amazon S3 Bucket where you are storing the original images
+S3BUCKET = os.environ['S3BUCKET']
+# Your Amazon access credentials
+AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
+AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
+# where server.py is running
+IMAGESERVERURL = os.environ.get('IMAGESERVERURL', 'http://i.hdimg.net/')
 
 import Image 
 import base64
@@ -183,12 +188,12 @@ def _scale(want_width, want_height, is_width, is_height):
 
 def imageurl(imageid, size='o'):
     """Get the URL where the Image can be accessed."""
-    return urlparse.urljoin(IMAGESERVER, os.path.join(size, imageid)) + '.jpeg'
+    return urlparse.urljoin(IMAGESERVERURL, os.path.join(size, imageid)) + '.jpeg'
     
 
 def scaled_imageurl(imageid, size='square'):
     """Get the URL where a scaled version of the Image can be accessed."""
-    return urlparse.urljoin(IMAGESERVER, os.path.join(_sizes.get(size, size), imageid)) + '.jpeg'
+    return urlparse.urljoin(IMAGESERVERURL, os.path.join(_sizes.get(size, size), imageid)) + '.jpeg'
     
 
 def scaled_imagedata(imageid, size='square'):
