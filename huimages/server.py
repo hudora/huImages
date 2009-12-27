@@ -3,14 +3,21 @@
 
 # Created 2006, 2009 by Maximillian Dornseif. Consider it BSD licensed.
 
-import couchdb.client
 import Image 
+import boto
+import boto.s3.connection
+import boto.s3.key
+import couchdb.client
 import os
 import os.path
 import re
 import tempfile
 from wsgiref.simple_server import make_server
 from flup.server.fcgi_fork import WSGIServer
+
+# This tool needs keeys being set at the shell:
+# export AWS_ACCESS_KEY_ID='AKIRA...Z'
+# export AWS_SECRET_ACCESS_KEY='hal6...7'
 
 COUCHSERVER = "http://couchdb.local.hudora.biz:5984"
 COUCHDB_NAME = "huimages"
@@ -181,6 +188,17 @@ def _get_original_file(doc_id):
     tempfilename = tempfile.mktemp(prefix='tmp_%s_%s' % ('o', doc_id), dir=CACHEDIR)
     open(os.path.join(tempfilename), 'w').write(filedata)
     os.rename(tempfilename, cachefilename)
+    
+    # upload to S3
+    conn = boto.s3.connection.S3Connection()
+    #s3bucket = conn.create_bucket('originals.i.hdimg.net', location=boto.s3.connection.Location.EU)
+    s3bucket = conn.get_bucket('originals.i.hdimg.net')
+    #s3bucket.set_acl('public-read')
+    k = boto.s3.key.Key(s3bucket)
+    k.key = "%s.jpeg" % doc_id 
+    ret = k.set_contents_from_filename(cachefilename) 
+    k.set_acl('public-read')
+    
     return open(cachefilename)
 
 
