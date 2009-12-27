@@ -32,7 +32,6 @@ COUCHSERVER = os.environ.get('COUCHSERVER', 'http://127.0.0.1:5984')
 CACHEDIR = os.path.abspath('../cache')
 S3BUCKET = os.environ['S3BUCKET']
 COUCHDB_NAME = "huimages"
-
 typ_re = re.compile('^(o|\d+x\d+!?)$')
 docid_re = re.compile('^[A-Z0-9]+$')
 
@@ -191,6 +190,17 @@ def _get_original_file(doc_id):
     # ensure the needed Dirs exist
     if not os.path.exists(os.path.join(CACHEDIR, 'o')):
         os.makedirs(os.path.join(CACHEDIR, 'o'))
+    
+    # try to get file from S3
+    conn = boto.connect_s3()
+    s3bucket = conn.get_bucket(S3BUCKET)
+    k = s3bucket.get_key(doc_id)
+    if k:
+        tempfilename = tempfile.mktemp(prefix='tmp_%s_%s' % ('o', doc_id), dir=CACHEDIR)
+        k.get_file(open(tempfilename, "w"))
+        os.rename(tempfilename, cachefilename)
+        return open(cachefilename)
+    
     
     # try to get file from S3
     conn = boto.connect_s3()

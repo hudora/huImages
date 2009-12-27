@@ -238,6 +238,7 @@ def scaled_dimensions(imageid, size='150x150'):
         doc = db[imageid]
         return _scale(width, height, doc['width'], doc['height'])
     except:
+        raise
         return (None, None)
     
 

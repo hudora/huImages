@@ -69,7 +69,7 @@ If you are short on diskspace fou can expire files from the cache directory
 by just removing the oldest file until you have enough space again.
 
 
-# Installation
+# Server Installation
 
 We will show installation on a Ubuntu 9.10 based [Amazon EC2][8] instance.
 huImages should qork on every POSIX system but requores a recent CouchDB
@@ -168,16 +168,8 @@ or has access to the CouchDB or S3 bucket. Be sure that your S3 bucket does
 
 # Further Reading
 
-<<<<<<< HEAD
- * [Blogpost about image Serving][10] (in german)
- * [django-photologue][11] - somewhat similar application
-
-[10]: http://blogs.23.nu/disLEXia/2009/02/imageserver/
-[11]: http://code.google.com/p/django-photologue/
-=======
  * [Blogpost about image Serving][12] (in german)
  * [django-photologue][13] - somewhat similar application
 
 [12]: http://blogs.23.nu/disLEXia/2009/02/imageserver/
 [13]: http://code.google.com/p/django-photologue/
->>>>>>> installation fixes / documentation
