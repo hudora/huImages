@@ -5,7 +5,7 @@ default: dependencies check
 
 hudson: dependencies check statistics
 	find huimages -name '*.py' | xargs /usr/local/hudorakit/bin/hd_pep8
-	/usr/local/hudorakit/bin/hd_pylint -f parseable huimages | tee pylint.out
+	/usr/local/hudorakit/bin/hd_pylint -f parseable huimages | tee .pylint.out
 
 check:
 	find huimages -name '*.py' | xargs /usr/local/hudorakit/bin/hd_pep8
@@ -19,17 +19,17 @@ build:
 	python setup.py build sdist bdist_egg
 
 statistics:
-	sloccount --wide --details huimages > sloccount.sc
+	sloccount --wide --details huimages > .sloccount.sc
 	
 
 upload: build
-	rsync dist/* root@cybernetics.hudora.biz:/usr/local/www/apache22/data/nonpublic/eggs/
+	python setup.py sdist upload
 
 install: build
 	sudo python setup.py install
 
 clean:
-	rm -Rf testenv build dist html test.db pylint.out sloccount.sc pip-log.txt
+	rm -Rf testenv build dist html test.db .pylint.out .sloccount.sc pip-log.txt
 	find . -name '*.pyc' -or -name '*.pyo' -delete
 
 .PHONY: build clean install upload check

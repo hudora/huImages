@@ -43,6 +43,11 @@ import urlparse
 from cStringIO import StringIO
 from operator import itemgetter
 
+keys = ['S3BUCKET', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'IMAGESERVERURL']
+for key in keys:
+    if key not in os.environ:
+        raise RuntimeError("Please set the %r environment variable!" % key)
+
 COUCHSERVER = os.environ.get('COUCHSERVER', 'http://127.0.0.1:5984')
 COUCHDB_NAME = "huimages"
 # Amazon S3 Bucket where you are storing the original images

@@ -12,7 +12,7 @@ accessing the image. You can get the URL of the Image via imageurl(ID) and
 
 This module uses the concept of "sizes". A size can be a numeric specification
 like "240x160". If the numeric specification ends with "!" (like in "75x75!")
-the image is scaled and cropped to be EXACTLY of that size. IF not the image
+the image is scaled and cropped to be EXACTLY of that size. If not the image
 keeps it aspect ratio.
 
 You can use `get_random_imageid()`, `get_next_imageid(ID)` and
@@ -92,7 +92,7 @@ You now should be logged into the new Amazon instance
     sudo apt-get install -y python-pip python-boto python-imaging
     sudo apt-get install -y python-couchdb python-flup
 
-    git clone git@github.com:hudora/huImages.git store-images-in-ec2
+    git clone git://github.com/hudora/huImages.git
     sudo mv huImages /usr/local/huImages
     cd /usr/local/huImages
     sudo mkdir /mnt/huimages-cache
@@ -149,11 +149,35 @@ values:
     >>> huimages.scaled_dimensions('23EQ53G6WZTGF5675CUJQFKBIS6UWWOL01', '320x240')
     (240, 240)
 
+Call `pydoc huimages` for further documentation.
+
+
+# Security
+
+Malicious users knowing the ID of an image can consume great amounts of CPU
+time, bandwith and diskspace.
+
+Users knowing the IS of an image can pass that one to unautorized users.
+
+Nobody should be able to see images on the server unless he knows the ID
+or has access to the CouchDB or S3 bucket. Be sure that your S3 bucket does
+[*not* provide public read access][11]!
+
+[11]: http://www.bucketexplorer.com/documentation/amazon-s3--access-control-list-details.html
+
 
 # Further Reading
 
+<<<<<<< HEAD
  * [Blogpost about image Serving][10] (in german)
  * [django-photologue][11] - somewhat similar application
 
 [10]: http://blogs.23.nu/disLEXia/2009/02/imageserver/
 [11]: http://code.google.com/p/django-photologue/
+=======
+ * [Blogpost about image Serving][12] (in german)
+ * [django-photologue][13] - somewhat similar application
+
+[12]: http://blogs.23.nu/disLEXia/2009/02/imageserver/
+[13]: http://code.google.com/p/django-photologue/
+>>>>>>> installation fixes / documentation

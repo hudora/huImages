@@ -1,3 +1,4 @@
+2.0    OpenSourced, use Amazon S3 for image storage
 1.04p1 Design geupdated
-1.04 Compatibilitaet mit neueren CouchDB Varianten, beseitigt #70175
-1.01 * implemented get_length() to better suit the file django storage API
+1.04   Compatibilitaet mit neueren CouchDB Varianten, beseitigt #70175
+1.01   implemented get_length() to better suit the file django storage API
