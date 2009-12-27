@@ -51,8 +51,6 @@ import time
 import urlparse
 from cStringIO import StringIO
 from operator import itemgetter
-from huTools.async import Future
-from huTools.decorators import cache_function
 
 _sizes = {'mini': "23x40",
           'thumb': "50x200", 
