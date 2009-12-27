@@ -148,6 +148,24 @@ def save_image(imagedata, contenttype=None, timestamp=None, title='',
     return doc_id
     
 
+def delete_image(imageid):
+    """Deletes an image and all associated data."""
+ 
+    # delete in CouchDB
+    db = _setup_couchdb()
+    try:
+        doc = db[imageid]
+        db.delete(doc)
+    except couchdb.client.ResourceNotFound:
+        pass
+    # Push data into S3 if needed
+    conn = boto.connect_s3()
+    s3bucket = conn.get_bucket('originals.i.hdimg.net')
+    k = s3bucket.get_key(imageid)
+    if k:
+        k.delete()
+                                                    
+
 def get_imagedoc(imageid):
     """Get a dictionary describing an Image."""
     db = _setup_couchdb()
