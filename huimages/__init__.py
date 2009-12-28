@@ -219,12 +219,15 @@ def scaled_imageurl(imageid, size='150x150'):
     
 
 def scaled_imagedata(imageid, size='150x150'):
-    """Returns the datastram of a scaled image."""
+    """Returns the datasteream of a scaled image."""
     url = scaled_imageurl(imageid, size)
     http = httplib2.Http()
     response, content = http.request(url, 'GET')
-    return content
-    
+    if str(response.status) == '200':
+        return content
+    else:
+        return None
+
 
 def scaled_dimensions(imageid, size='150x150'):
     """Returns the dimensions of an image after scaling."""
