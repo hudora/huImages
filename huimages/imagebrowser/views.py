@@ -107,8 +107,7 @@ def startpage(request):
     linef = []
     for dummy in range(3):
         linef.append(Future(get_line))
-    tagcount = tagfuture().items()
-    tagcount.sort()
+    tagcount = sorted(tagfuture().items())
     lines = []
     for line in linef:
         lines.append(line())
