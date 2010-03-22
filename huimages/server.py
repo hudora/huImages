@@ -3,11 +3,11 @@
 
 """Serving of Images from CouchDB or Amazon S3 with scaling.
 
-Is meant to run with lighttpd for fast serving and cache friendly locking.
+Is meant to run with lighttpd for fast serving and cache friendly headers.
 /etc/lighttpd/lighttpd.conf should look like examples/lighttpd.conf
 
-If you start getting low on disk space. delete the oldest files in
-/usr/local/huimages/cache/
+If you start getting low on disk space, delete the oldest files in
+/usr/local/huImages/cache/
 """
 
 # Created 2006, 2009 by Maximillian Dornseif. Consider it BSD licensed.
@@ -33,7 +33,6 @@ COUCHSERVER = os.environ.get('COUCHSERVER', 'http://127.0.0.1:5984')
 CACHEDIR = os.path.abspath('../cache')
 S3BUCKET = os.environ['S3BUCKET']
 COUCHDB_NAME = "huimages"
-
 typ_re = re.compile('^(o|\d+x\d+!?)$')
 docid_re = re.compile('^[A-Z0-9]+$')
 
@@ -189,7 +188,7 @@ def _get_original_file(doc_id):
         # File exists in the cache
         return open(cachefilename)
     
-    # ensure the needed Dirs exist
+    # ensure the needed dirs exist
     if not os.path.exists(os.path.join(CACHEDIR, 'o')):
         os.makedirs(os.path.join(CACHEDIR, 'o'))
     
@@ -198,6 +197,7 @@ def _get_original_file(doc_id):
     s3bucket = conn.get_bucket(S3BUCKET)
     k = s3bucket.get_key(doc_id)
     if k:
+        # write then rename to avoid race conditions
         tempfilename = tempfile.mktemp(prefix='tmp_%s_%s' % ('o', doc_id), dir=CACHEDIR)
         k.get_file(open(tempfilename, "w"))
         os.rename(tempfilename, cachefilename)
@@ -214,11 +214,12 @@ def _get_original_file(doc_id):
     
     # save original Image in Cache
     filedata = db.get_attachment(doc_id, filename)
+    # write then rename to avoid race conditions
     tempfilename = tempfile.mktemp(prefix='tmp_%s_%s' % ('o', doc_id), dir=CACHEDIR)
     open(os.path.join(tempfilename), 'w').write(filedata)
     os.rename(tempfilename, cachefilename)
     
-    # upload to S3
+    # upload to S3 for migrating
     conn = boto.s3.connection.S3Connection()
     #s3bucket = conn.create_bucket('originals.i.hdimg.net', location=boto.s3.connection.Location.EU)
     s3bucket = conn.get_bucket('originals.i.hdimg.net')
