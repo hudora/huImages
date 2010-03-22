@@ -12,7 +12,7 @@ If you start getting low on disk space, delete the oldest files in
 
 # Created 2006, 2009 by Maximillian Dornseif. Consider it BSD licensed.
 
-import Image 
+import Image
 import boto
 import boto.s3.connection
 import boto.s3.key
@@ -116,10 +116,10 @@ def imagserver(environ, start_response):
     if not docid_re.match(doc_id):
         start_response('501 Error', [('Content-Type', 'text/plain')])
         return ["Not Implemented\n"]
-    
+
     if not os.path.exists(os.path.join(CACHEDIR, typ)):
         os.makedirs(os.path.join(CACHEDIR, typ))
-    
+
     cachefilename = os.path.join(CACHEDIR, typ, doc_id + '.jpeg')
     if os.path.exists(cachefilename):
         # serve request from cache
@@ -127,20 +127,20 @@ def imagserver(environ, start_response):
                                   ('Cache-Control', 'max-age=172800, public'), # 2 Days
                                   ])
         return open(cachefilename)
-    
+
     # get data from database
     orgfile = _get_original_file(doc_id)
     if not orgfile:
         start_response('404 Not Found', [('Content-Type', 'text/plain')])
         return ["File not found"]
-    
+
     if typ == 'o':
         imagefile = orgfile
     else:
         width, height = typ.split('x')
         try:
             img = Image.open(orgfile)
-                
+
             if height.endswith('!'):
                 height = height.strip('!')
                 img = _crop_image(width, height, img)
@@ -154,13 +154,13 @@ def imagserver(environ, start_response):
 
         if img.mode != "RGB":
             img = img.convert("RGB")
-        
+
         tempfilename = tempfile.mktemp(prefix='tmp_%s_%s' % (typ, doc_id), dir=CACHEDIR)
         img.save(tempfilename, "JPEG")
         os.rename(tempfilename, cachefilename)
         # using X-Sendfile could speed this up.
         imagefile = open(cachefilename)
-    
+
     start_response('200 OK', [('Content-Type', 'image/jpeg'),
                               ('Cache-Control', 'max-age=172800, public'), # 2 Days
                               ])
@@ -178,20 +178,20 @@ def save_imagserver(environ, start_response):
         except:
             pass
         return ['Error']
-    
+
 
 def _get_original_file(doc_id):
     """Returns a filehandle for the unscaled file related to doc_id."""
-    
+
     cachefilename = os.path.join(CACHEDIR, 'o', doc_id + '.jpeg')
     if os.path.exists(cachefilename):
         # File exists in the cache
         return open(cachefilename)
-    
+
     # ensure the needed dirs exist
     if not os.path.exists(os.path.join(CACHEDIR, 'o')):
         os.makedirs(os.path.join(CACHEDIR, 'o'))
-    
+
     # try to get file from S3
     conn = boto.connect_s3()
     s3bucket = conn.get_bucket(S3BUCKET)
@@ -202,33 +202,32 @@ def _get_original_file(doc_id):
         k.get_file(open(tempfilename, "w"))
         os.rename(tempfilename, cachefilename)
         return open(cachefilename)
-    
+
     # try to get it from couchdb
     db = couchdb.client.Server(COUCHSERVER)[COUCHDB_NAME]
     try:
         doc = db[doc_id]
     except couchdb.client.ResourceNotFound:
         return None
-        
+
     filename = doc['_attachments'].keys()[0]
-    
+
     # save original Image in Cache
     filedata = db.get_attachment(doc_id, filename)
     # write then rename to avoid race conditions
     tempfilename = tempfile.mktemp(prefix='tmp_%s_%s' % ('o', doc_id), dir=CACHEDIR)
     open(os.path.join(tempfilename), 'w').write(filedata)
     os.rename(tempfilename, cachefilename)
-    
-    # upload to S3 for migrating
-    conn = boto.s3.connection.S3Connection()
-    #s3bucket = conn.create_bucket('originals.i.hdimg.net', location=boto.s3.connection.Location.EU)
-    s3bucket = conn.get_bucket('originals.i.hdimg.net')
-    #s3bucket.set_acl('public-read')
-    k = boto.s3.key.Key(s3bucket)
-    k.key = "%s.jpeg" % doc_id 
-    ret = k.set_contents_from_filename(cachefilename)
-    k.set_acl('public-read')
-    
+
+    # upload to S3 for migrating form CouchDB to S3
+    conn = boto.connect_s3()
+    k = s3bucket.get_key(doc_id)
+    if not k:
+        k = boto.s3.key.Key(s3bucket)
+        k.key = doc_id
+        k.set_contents_from_filename(cachefilename)
+        k.make_public()
+
     return open(cachefilename)
 
 
@@ -237,7 +236,7 @@ if standalone:
     PORT = 8080
     httpd = make_server('', PORT, imagserver)
     print 'Starting up HTTP server on port %i...' % PORT
-    
+
     # Respond to requests until process is killed
     httpd.serve_forever()
 
