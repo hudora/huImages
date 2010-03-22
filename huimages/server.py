@@ -29,6 +29,7 @@ from flup.server.fcgi_fork import WSGIServer
 # export AWS_SECRET_ACCESS_KEY='hal6...7'
 
 COUCHSERVER = os.environ.get('COUCHSERVER', 'http://127.0.0.1:5984')
+#COUCHSERVER = "http://couchdb.local.hudora.biz:5984"
 CACHEDIR = os.path.abspath('../cache')
 S3BUCKET = os.environ['S3BUCKET']
 COUCHDB_NAME = "huimages"
@@ -217,14 +218,15 @@ def _get_original_file(doc_id):
     open(os.path.join(tempfilename), 'w').write(filedata)
     os.rename(tempfilename, cachefilename)
     
-    # upload to S3 for migrating form CouchDB to S3
-    conn = boto.connect_s3()
-    k = s3bucket.get_key(doc_id)
-    if not k:
-        k = boto.s3.key.Key(s3bucket)
-        k.key = doc_id 
-        k.set_contents_from_filename(cachefilename)
-        k.make_public()
+    # upload to S3
+    conn = boto.s3.connection.S3Connection()
+    #s3bucket = conn.create_bucket('originals.i.hdimg.net', location=boto.s3.connection.Location.EU)
+    s3bucket = conn.get_bucket('originals.i.hdimg.net')
+    #s3bucket.set_acl('public-read')
+    k = boto.s3.key.Key(s3bucket)
+    k.key = "%s.jpeg" % doc_id 
+    ret = k.set_contents_from_filename(cachefilename)
+    k.set_acl('public-read')
     
     return open(cachefilename)
 
