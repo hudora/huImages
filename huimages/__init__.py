@@ -107,9 +107,9 @@ def save_image(imagedata, contenttype=None, timestamp=None, title='',
     # the '01' postfix can later used to idnetify the cluster the image is stored on
     doc_id = "%s01" % base64.b32encode(hashlib.sha1(imagedata).digest()).rstrip('=')
     
-    try:
+    if doc_id in db:
         doc = db[doc_id]
-    except couchdb.client.ResourceNotFound:
+    else:
         doc = {}
     
     if not contenttype:

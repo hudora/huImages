@@ -27,6 +27,7 @@ IMAGESERVER = "http://i.hdimg.net"
 COUCHSERVER = "http://couchdb.local.hudora.biz:5984"
 COUCHDB_NAME = "huimages"
 
+# helpers
 
 def get_rating(imageid):
     server = couchdb.client.Server(COUCHSERVER)
@@ -90,12 +91,20 @@ def get_favorites(uid):
     db = server[COUCHDB_NAME+'_meta']
     ret = [x.value for x in db.view('favorites/all', startkey=uid, endkey="%sZ" % uid)]
     return ret
-    
 
-# ****************************
+
+def set_tags(newtags, imageid, userid):
+    newtags = newtags.lower().replace(',', ' ').split(' ')
+    newtags = [x.strip() for x in newtags if x.strip()]
+    tags = set(get_user_tags(imageid, userid) + newtags)
+    tags = [x.lower() for x in list(tags) if x]
+    update_user_metadata(imageid, userid, {'tags': tags})
+    return newtags
+
+
+# views
 
 def startpage(request):
-    
     def get_line():
         line = []
         for dummy in range(5):
@@ -115,7 +124,21 @@ def startpage(request):
     return render_to_response('imagebrowser/startpage.html', {'lines': lines, 'tags': tagcount, 
                               'title': 'HUDORA Bilderarchiv'},
                                 context_instance=RequestContext(request))
-    
+
+
+def upload(request):
+    if request.method == "POST":
+        form = UploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            image = request.FILES['image']
+            imageid = save_image(image.read(), title=form.cleaned_data.get('title'))
+            set_tags(form.cleaned_data.get('tags'), imageid, request.clienttrack_uid)
+            return HttpResponseRedirect(reverse('view-image', kwargs={'imageid': imageid}))
+    else:
+        form = UploadForm()
+    return render_to_response('imagebrowser/upload.html', {'form': form, 'title': 'Bilder Upload'},
+                                context_instance=RequestContext(request))
+
 
 def favorites_redirect(request):
     """Redirects to the user specific favorites page."""
@@ -208,18 +231,16 @@ def rate(request, imageid):
     response = HttpResponse(json, mimetype='application/json')
     return response    
 
-# AJAX tagging
-
 def tag(request, imageid):
-    newtags = request.POST['newtag'].lower().replace(',', ' ').split(' ')
-    newtags = [x.strip() for x in newtags if x.strip()]
-    tags = set(get_user_tags(imageid, request.clienttrack_uid) + newtags)
-    tags = [x.lower() for x in list(tags) if x]
-    update_user_metadata(imageid, request.clienttrack_uid, {'tags': tags})
+    """Set tags via AJAX."""
+    newtags = request.POST['newtag']
+    userid = request.clienttrack_uid
+    newtags = set_tags(newtags, imageid, userid)
     # todo: flush tag cache
     json = simplejson.dumps(newtags)
     response = HttpResponse(json, mimetype='application/json')
     return response
+
 
 # AJAX titeling
 
@@ -229,14 +250,3 @@ def update_title(request, imageid):
     return response
 
 
-def upload(request):
-    if request.method == "POST":
-        form = UploadForm(request.POST, request.FILES)
-        if form.is_valid():
-            image = request.FILES['image']
-            imageid = save_image(image.read(), title=form.cleaned_data.get('title'))
-            return HttpResponseRedirect(reverse('view-image', kwargs={'imageid': imageid}))
-    else:
-        form = UploadForm()
-    return render_to_response('imagebrowser/upload.html', {'form': form, 'title': 'Bilder Upload'},
-                                context_instance=RequestContext(request))

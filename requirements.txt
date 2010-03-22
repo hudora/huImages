@@ -2,3 +2,4 @@ couchdb
 huTools
 PIL
 boto
+-e git+http://github.com/tstone/django-uploadify.git#egg=uploadify
