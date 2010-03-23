@@ -40,11 +40,21 @@ def get_rating(imageid):
     
 
 def get_user_tags(imageid, userid):
+    """Returns a list of user specific tags"""
     server = couchdb.client.Server(COUCHSERVER)
     db = server[COUCHDB_NAME+'_meta']
     doc_id = "%s-%s" % (imageid, userid)
     return db.get(doc_id, {}).get('tags', [])
-    
+
+
+def get_all_tags(imageid):
+    """Return a list of all tags for an image"""
+    server = couchdb.client.Server(COUCHSERVER)
+    db = server[COUCHDB_NAME+'_meta']
+    doc_id = imageid
+    tags = set([x.value for x in db.view('tags/tags_per_document', startkey=imageid, endkey="%sZ" % imageid)])
+    return list(tags)
+
 
 def is_favorite(imageid, userid):
     server = couchdb.client.Server(COUCHSERVER)
@@ -156,7 +166,7 @@ def image(request, imageid):
     imagedoc = get_imagedoc(imageid)
     votecount, rating = get_rating(imageid)
     favorite = is_favorite(imageid, request.clienttrack_uid)
-    tags = get_user_tags(imageid, request.clienttrack_uid)
+    tags = get_all_tags(imageid)
     previousid = get_previous_imageid(imageid)
     nextid = get_next_imageid(imageid)
     return render_to_response('imagebrowser/image.html', {'imagetag': imagetag,

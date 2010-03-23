@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 setup(name='huImages',
       maintainer='Maximillian Dornseif',
       maintainer_email='md@hudora.de',
-      version='2.0p3',
+      version='2.01',
       url='http://github.com/hudora/huImages/',
       description='Image storage & scaling in CouchDB.',
       long_description=long_description,
