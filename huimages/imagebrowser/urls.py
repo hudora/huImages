@@ -1,6 +1,8 @@
 from django.conf.urls.defaults import *
 
 urlpatterns = patterns('',
+    (r'^upload/api/', 'huimages.imagebrowser.views.api_store_image'),
+    (r'^upload/swfupload.swf', 'huimages.imagebrowser.views.upload_serve_swffile'),
     (r'^upload/', 'huimages.imagebrowser.views.upload'),
     (r'^image/random/', 'huimages.imagebrowser.views.random_image'),
     (r'^image/(?P<imageid>.+)/previous/', 'huimages.imagebrowser.views.previous_image'),

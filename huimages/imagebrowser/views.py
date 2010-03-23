@@ -9,6 +9,7 @@ Copyright (c) 2009 HUDORA. All rights reserved.
 
 
 import couchdb.client
+import os
 from operator import itemgetter
 from huTools.async import Future
 from huTools.decorators import cache_function
@@ -45,7 +46,14 @@ def get_user_tags(imageid, userid):
     db = server[COUCHDB_NAME+'_meta']
     doc_id = "%s-%s" % (imageid, userid)
     return db.get(doc_id, {}).get('tags', [])
-    
+
+
+def get_user_tags(imageid, userid):
+    server = couchdb.client.Server(COUCHSERVER)
+    db = server[COUCHDB_NAME+'_meta']
+    doc_id = "%s-%s" % (imageid, userid)
+    return db.get(doc_id, {}).get('tags', [])
+
 
 def is_favorite(imageid, userid):
     server = couchdb.client.Server(COUCHSERVER)
@@ -69,10 +77,11 @@ def update_user_metadata(imageid, userid, data):
     doc_id = "%s-%s" % (imageid, userid)
     doc = {'imageid': imageid, 'userid': userid}
     doc.update(data)
-    
+    open('/tmp/debug3.txt', 'a').write(repr([doc_id]))
+
     try:
         db[doc_id] = doc
-    except couchdb.client.ResourceConflict:
+    except couchdb.client.http.ResourceConflict:
         doc = db[doc_id]
         doc.update(data)
         db[doc_id] = doc
@@ -94,10 +103,12 @@ def get_favorites(uid):
 
 
 def set_tags(newtags, imageid, userid):
+    open('/tmp/debug2.txt', 'a').write(repr([newtags, imageid, userid]))
     newtags = newtags.lower().replace(',', ' ').split(' ')
     newtags = [x.strip() for x in newtags if x.strip()]
     tags = set(get_user_tags(imageid, userid) + newtags)
     tags = [x.lower() for x in list(tags) if x]
+    open('/tmp/debug2.txt', 'a').write(repr([tags]))
     update_user_metadata(imageid, userid, {'tags': tags})
     return newtags
 
@@ -136,8 +147,39 @@ def upload(request):
             return HttpResponseRedirect(reverse('view-image', kwargs={'imageid': imageid}))
     else:
         form = UploadForm()
-    return render_to_response('imagebrowser/upload.html', {'form': form, 'title': 'Bilder Upload'},
+    return render_to_response('imagebrowser/upload.html', {'form': form, 'title': 'Bilder Upload',
+                                                           'clienttrack': request.clienttrack_uid},
                                 context_instance=RequestContext(request))
+
+
+def api_store_image(request):
+    if request.method == 'POST':
+        open('/tmp/debug.txt', 'a').write(repr(request.POST))
+        open('/tmp/debug.txt', 'a').write(repr(request.GET))
+        if request.FILES:
+            try:
+                open('/tmp/debug.txt', 'a').write('\na\n')
+                open('/tmp/debug.txt', 'a').write(repr(request.FILES.keys()))
+                image = request.FILES['uploadfile']
+                open('/tmp/debug.txt', 'a').write('\nb\n')
+                imageid = save_image(image.read(), title=request.GET.get('title', ''))
+                open('/tmp/debug.txt', 'a').write('\ntags = ')
+                open('/tmp/debug.txt', 'a').write(repr(request.GET.get('tags', '')))
+                set_tags(request.GET.get('tags', ''), imageid, request.GET.get('clienttrack'. 'API'))
+                open('/tmp/debug.txt', 'a').write('\nd\n')
+                update_user_metadata(imageid, 'API', {'tags': ['test']})
+            except Exception, msg:
+                open('/tmp/debug.txt', 'a').write('\n\n-----\n\n' + repr(msg) + '\n')
+            return HttpResponse(imageid)
+    raise Http404
+
+
+def upload_serve_swffile(request):
+    """Server the Shopwave uploader - should be served from the same path as the upload destination."""
+    ret = HttpResponse(mimetype="application/xhtml+xml")
+    fd = open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'swfupload.swf'))
+    ret.write(fd.read())
+    return ret
 
 
 def favorites_redirect(request):
