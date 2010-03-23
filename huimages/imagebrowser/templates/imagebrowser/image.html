@@ -63,7 +63,7 @@ DIV.tagMatches SPAN {
         <div id="tagarea" style="">
             <ul id="tags">
                 {% for tag in tags %}
-                    <li><a href="/images/tag/{{ tag }}/">{{ tag }}</a></li>
+                    <li><a href="../../tag/{{ tag }}/">{{ tag }}</a></li>
                 {% endfor %}
             </ul>
         
@@ -93,7 +93,7 @@ DIV.tagMatches SPAN {
                 $('#addTags').show();
                 $("#tagForm .indicator").hide();
                 $("#tagForm").hide("fast"); 
-                response.forEach(function(t) {$("#tags").append('<li><a href="/images/tag/'+t+'/">'+t+"</a></li>");} );
+                response.forEach(function(t) {$("#tags").append('<li><a href="../../tag/'+t+'/">'+t+"</a></li>");} );
                 $("#tagForm").attr("disabled", false);
             },
         }; 

@@ -1,5 +1,5 @@
 long_description = """huimages is an way of storing images in couchdb and
-serving them with high preformance back to clients."""
+serving them with high performance back to clients."""
 
 from setuptools import setup, find_packages
 

@@ -157,7 +157,7 @@ Call `pydoc huimages` for further documentation.
 Malicious users knowing the ID of an image can consume great amounts of CPU
 time, bandwith and diskspace.
 
-Users knowing the IS of an image can pass that one to unautorized users.
+Users knowing the ID of an image can pass that one to unautorized users.
 
 Nobody should be able to see images on the server unless he knows the ID
 or has access to the CouchDB or S3 bucket. Be sure that your S3 bucket does

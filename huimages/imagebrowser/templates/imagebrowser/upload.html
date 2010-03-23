@@ -26,17 +26,13 @@ DIV.tagMatches SPAN {
 {% block breadcrumbs %}<div class="breadcrumbs"><a href="/">Homepage</a>
 &rsaquo; <a href="/i/">HUDORA Bilderarchiv</a>
 &rsaquo; {{ title }}</div>{% endblock %}
-  {% block content %}
-    <form enctype="multipart/form-data" method="post" action=".">
-        <table>
-        {{ form.as_table }}
-        </table>
-    <input type="submit" value="Upload"/>
-    </form>
+{% block content %}
 
 <script type="text/javascript" src="http://s.hdimg.net/libs/swfupload/swfupload.js"></script>
 <script type="text/javascript" src="http://s.hdimg.net/libs/jquery.swfupload.js"></script>
 <script type="text/javascript" src="http://s.hdimg.net/libs/swfupload/swfupload.cookies.js"></script>
+
+
 <script type="text/javascript">
 var swfu;
 
@@ -107,12 +103,12 @@ $(function(){
 		//file_upload_limit : 2,
         assume_success_timeout: 29,
         use_query_string: true,
-        post_params: {'clienttrack': {{ clienttrack }}},
-		button_image_url : 'http://s.hdimg.net/libs/swfupload/wdp_buttons_upload_114x29.png',
+        post_params: {'clienttrack': "{{ clienttrack }}"},
+		button_image_url : "http://s.hdimg.net/libs/swfupload/wdp_buttons_upload_114x29.png",
 		button_width : 114,
 		button_height : 29,
 		button_placeholder : $('#swfupload-control #button')[0],
-		debug: true,
+		debug: false,
 
 		file_queued_handler : fileQueued,
 		file_queue_error_handler : fileQueueError,
@@ -140,14 +136,26 @@ $(function(){
 	background:url('http://s.hdimg.net/libs/swfupload/cancel.png') no-repeat; cursor:pointer; }
 </style>
 
-	<h3>&raquo; Multiple File Upload With Progress Bar</h3>
-	
-<div id="swfupload-control">
-	<p>Upload upto 5 image files(jpg, png, gif), each having maximum size of 1MB</p>
-	<input type="button" id="button" />
-	<p id="queuestatus" ></p>
-	<ol id="log"></ol>
-</div>
+
+    <form enctype="multipart/form-data" method="post" action=".">
+        <table>
+        <tr><th><label for="id_title">Title:</label></th><td><input type="text" name="title" id="id_title" /></td></tr>
+<tr><th><label for="id_tags">Tags:</label></th><td><input type="text" name="tags" id="id_tags" /></td></tr>
+        </table>
+        <br/>
+        <br/>
+        <div style="float: left">
+            <label for="id_image">Image:</label><input type="file" name="image" id="id_image" /><br/>
+            <input type="submit" value="Einzelne Datei hochladen"/>
+        </div>
+        <div id="swfupload-control" style="float: right">
+        	<p>Mehrere Dateien (jpg), hochladen:</p>
+        	<input type="button" id="button" />
+        	<p id="queuestatus" ></p>
+        	<ol id="log"></ol>
+        </div>
+        <div> - oder - </div>
+    </form>    
 
 </body>
 

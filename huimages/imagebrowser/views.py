@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-untitled.py
+imagebrowser/views.py
 
 Created by Maximillian Dornseif on 2009-01-29.
-Copyright (c) 2009 HUDORA. All rights reserved.
+Copyright (c) 2009, 2010 HUDORA. All rights reserved.
 """
 
 
@@ -39,7 +39,7 @@ def get_rating(imageid):
         return votecount, float(ret[0][1])/votecount
     else:
         return 0, 0
-    
+
 
 def get_user_tags(imageid, userid):
     """Returns a list of user specific tags"""
@@ -63,7 +63,7 @@ def is_favorite(imageid, userid):
     db = server[COUCHDB_NAME+'_meta']
     doc_id = "%s-%s" % (imageid, userid)
     return db.get(doc_id, {}).get('favorite', False)
-    
+
 
 @cache_function(60)
 def get_tagcount():
@@ -71,12 +71,12 @@ def get_tagcount():
     db = server[COUCHDB_NAME+'_meta']
     ret = dict([(x.key, x.value) for x in db.view('tags/tagcount', group=True)])
     return ret
-    
+
 
 def update_user_metadata(imageid, userid, data):
     server = couchdb.client.Server(COUCHSERVER)
     db = server[COUCHDB_NAME+'_meta']
-    
+
     doc_id = "%s-%s" % (imageid, userid)
     doc = {'imageid': imageid, 'userid': userid}
     doc.update(data)
@@ -88,7 +88,7 @@ def update_user_metadata(imageid, userid, data):
         doc = db[doc_id]
         doc.update(data)
         db[doc_id] = doc
-    
+
 
 def images_by_tag(tagname):
     """Returns ImageIds with a certain tag."""
@@ -96,7 +96,7 @@ def images_by_tag(tagname):
     db = server[COUCHDB_NAME+'_meta']
     ret = [x.value for x in db.view('tags/document_per_tag', startkey=tagname, endkey="%sZ" % tagname)]
     return ret
-    
+
 
 def get_favorites(uid):
     server = couchdb.client.Server(COUCHSERVER)
@@ -125,7 +125,7 @@ def startpage(request):
             imageid = get_random_imageid()
             line.append(mark_safe('<a href="image/%s/">%s</a>' % (imageid, scaled_tag(imageid, "150x150!"))))
         return line
-    
+
     tagfuture = Future(get_tagcount)
     linef = []
     for dummy in range(3):
@@ -134,7 +134,7 @@ def startpage(request):
     lines = []
     for line in linef:
         lines.append(line())
-    return render_to_response('imagebrowser/startpage.html', {'lines': lines, 'tags': tagcount, 
+    return render_to_response('imagebrowser/startpage.html', {'lines': lines, 'tags': tagcount,
                               'title': 'HUDORA Bilderarchiv'},
                                 context_instance=RequestContext(request))
 
@@ -156,22 +156,10 @@ def upload(request):
 
 def api_store_image(request):
     if request.method == 'POST':
-        open('/tmp/debug.txt', 'a').write(repr(request.POST))
-        open('/tmp/debug.txt', 'a').write(repr(request.GET))
         if request.FILES:
-            try:
-                open('/tmp/debug.txt', 'a').write('\na\n')
-                open('/tmp/debug.txt', 'a').write(repr(request.FILES.keys()))
-                image = request.FILES['uploadfile']
-                open('/tmp/debug.txt', 'a').write('\nb\n')
-                imageid = save_image(image.read(), title=request.GET.get('title', ''))
-                open('/tmp/debug.txt', 'a').write('\ntags = ')
-                open('/tmp/debug.txt', 'a').write(repr(request.GET.get('tags', '')))
-                set_tags(request.GET.get('tags', ''), imageid, request.GET.get('clienttrack'. 'API'))
-                open('/tmp/debug.txt', 'a').write('\nd\n')
-                update_user_metadata(imageid, 'API', {'tags': ['test']})
-            except Exception, msg:
-                open('/tmp/debug.txt', 'a').write('\n\n-----\n\n' + repr(msg) + '\n')
+            image = request.FILES['uploadfile']
+            imageid = save_image(image.read(), title=request.GET.get('title', ''))
+            set_tags(request.GET.get('tags', ''), imageid, request.GET.get('clienttrack', 'API'))
             return HttpResponse(imageid)
     raise Http404
 
@@ -187,7 +175,7 @@ def upload_serve_swffile(request):
 def favorites_redirect(request):
     """Redirects to the user specific favorites page."""
     return HttpResponseRedirect("%s/" % request.clienttrack_uid)
-    
+
 
 def favorites(request, uid):
     ret = get_favorites(uid, request)
@@ -200,9 +188,9 @@ def favorites(request, uid):
                 line.append(mark_safe('<a href="/i/image/%s/">%s</a>' % (imageid,
                             scaled_tag(imageid, "150x150!"))))
         lines.append(line)
-    return render_to_response('imagebrowser/startpage.html', {'lines': lines, 'title': 'Ihre Favoriten'},
+    return render_to_response('imagebrowser/collection.html', {'lines': lines, 'title': 'Ihre Favoriten'},
                                 context_instance=RequestContext(request))
-    
+
 
 def by_tag(request, tagname):
     ret = images_by_tag(tagname)
@@ -215,9 +203,9 @@ def by_tag(request, tagname):
                 line.append(mark_safe('<a href="/i/image/%s/">%s</a>' % (imageid,
                             scaled_tag(imageid, "150x150!"))))
         lines.append(line)
-    return render_to_response('imagebrowser/startpage.html', {'lines': lines, 'title': 'Tag "%s"' % tagname},
+    return render_to_response('imagebrowser/collection.html', {'lines': lines, 'title': 'Tag "%s"' % tagname},
                                 context_instance=RequestContext(request))
-    
+
 
 def image(request, imageid):
     imagetag = mark_safe('<a href="%s">%s</a>' % (imageurl(imageid), scaled_tag(imageid, "vga")))
@@ -234,19 +222,19 @@ def image(request, imageid):
         'next': mark_safe('<a href="../../image/%s/">%s</a>' % (nextid, scaled_tag(nextid, "75x75!"))),
         'title': imagedoc.get('title', ['ohne Titel'])[-1]},
                                 context_instance=RequestContext(request))
-    
+
 
 def previous_image(request, imageid):
     return HttpResponseRedirect("../../%s/" % get_previous_imageid(imageid))
-    
+
 
 def random_image(request):
     return HttpResponseRedirect("../%s/" % get_random_imageid())
-    
+
 
 def next_image(request, imageid):
     return HttpResponseRedirect("../../%s/" % get_next_imageid(imageid))
-    
+
 
 def tag_suggestion(request, imageid):
     prefix = request.GET.get('tag', '')
@@ -254,7 +242,7 @@ def tag_suggestion(request, imageid):
     tagcount.sort(key = itemgetter(1), reverse=True)
     json = simplejson.dumps([x[0] for x in tagcount if x[0].startswith(prefix)])
     response = HttpResponse(json, mimetype='application/json')
-    return response    
+    return response
 
 # AJAX bookmarking
 
@@ -273,7 +261,7 @@ def rate(request, imageid):
     votecount, rating = get_rating(imageid)
     json = simplejson.dumps(rating)
     response = HttpResponse(json, mimetype='application/json')
-    return response    
+    return response
 
 def tag(request, imageid):
     """Set tags via AJAX."""
@@ -292,5 +280,3 @@ def update_title(request, imageid):
     set_title(imageid, request.POST['value'])
     response = HttpResponse(request.POST['value'], mimetype='text/plain')
     return response
-
-
