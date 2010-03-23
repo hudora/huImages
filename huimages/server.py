@@ -3,11 +3,11 @@
 
 """Serving of Images from CouchDB or Amazon S3 with scaling.
 
-Is meant to run with lighttpd for fast serving and cache friendly locking.
+Is meant to run with lighttpd for fast serving and cache friendly headers.
 /etc/lighttpd/lighttpd.conf should look like examples/lighttpd.conf
 
-If you start getting low on disk space. delete the oldest files in
-/usr/local/huimages/cache/
+If you start getting low on disk space, delete the oldest files in
+/usr/local/huImages/cache/
 """
 
 # Created 2006, 2009 by Maximillian Dornseif. Consider it BSD licensed.
@@ -187,7 +187,7 @@ def _get_original_file(doc_id):
         # File exists in the cache
         return open(cachefilename)
     
-    # ensure the needed Dirs exist
+    # ensure the needed dirs exist
     if not os.path.exists(os.path.join(CACHEDIR, 'o')):
         os.makedirs(os.path.join(CACHEDIR, 'o'))
     
@@ -196,17 +196,7 @@ def _get_original_file(doc_id):
     s3bucket = conn.get_bucket(S3BUCKET)
     k = s3bucket.get_key(doc_id)
     if k:
-        tempfilename = tempfile.mktemp(prefix='tmp_%s_%s' % ('o', doc_id), dir=CACHEDIR)
-        k.get_file(open(tempfilename, "w"))
-        os.rename(tempfilename, cachefilename)
-        return open(cachefilename)
-    
-    
-    # try to get file from S3
-    conn = boto.connect_s3()
-    s3bucket = conn.get_bucket(S3BUCKET)
-    k = s3bucket.get_key(doc_id)
-    if k:
+        # write then rename to avoid race conditions
         tempfilename = tempfile.mktemp(prefix='tmp_%s_%s' % ('o', doc_id), dir=CACHEDIR)
         k.get_file(open(tempfilename, "w"))
         os.rename(tempfilename, cachefilename)
@@ -223,20 +213,10 @@ def _get_original_file(doc_id):
     
     # save original Image in Cache
     filedata = db.get_attachment(doc_id, filename)
+    # write then rename to avoid race conditions
     tempfilename = tempfile.mktemp(prefix='tmp_%s_%s' % ('o', doc_id), dir=CACHEDIR)
     open(os.path.join(tempfilename), 'w').write(filedata)
     os.rename(tempfilename, cachefilename)
-    
-    # upload to S3 for migrating form CouchDB to S3
-    conn = boto.connect_s3()
-    k = s3bucket.get_key(doc_id)
-    if not k:
-        k = boto.s3.key.Key(s3bucket)
-        k.key = doc_id 
-        k.set_contents_from_filename(cachefilename)
-        k.make_public()
-    
-    return open(cachefilename)
 
 
 standalone = False
