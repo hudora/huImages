@@ -1,4 +1,5 @@
 2.1    Uploading more than one file at once
+2.01   Show ALL tags, not only user tags on an image
 2.0    OpenSourced, use Amazon S3 for image storage
 1.04p1 Design geupdated
 1.04   Compatibilitaet mit neueren CouchDB Varianten, beseitigt #70175

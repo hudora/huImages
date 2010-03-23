@@ -138,7 +138,7 @@ def save_image(imagedata, contenttype=None, timestamp=None, title='',
     
     # Push data into S3 if needed
     conn = boto.connect_s3()
-    s3bucket = conn.get_bucket('originals.i.hdimg.net')
+    s3bucket = conn.get_bucket(S3BUCKET)
     k = s3bucket.get_key(doc_id)
     if not k:
         headers = {}
@@ -165,11 +165,11 @@ def delete_image(imageid):
         pass
     # Push data into S3 if needed
     conn = boto.connect_s3()
-    s3bucket = conn.get_bucket('originals.i.hdimg.net')
+    s3bucket = conn.get_bucket(S3BUCKET)
     k = s3bucket.get_key(imageid)
     if k:
         k.delete()
-                                                    
+
 
 def get_imagedoc(imageid):
     """Get a dictionary describing an Image."""
