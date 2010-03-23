@@ -118,6 +118,8 @@ def save_image(imagedata, contenttype=None, timestamp=None, title='',
             contenttype = contenttype[0]
     if not timestamp:
         timestamp = _datetime2str(datetime.datetime.now())
+    if not isinstance(timestamp, basestring):
+        timestamp = _datetime2str(timestamp)
     if not 'ctime' in doc:
         doc['ctime'] = timestamp
     doc['mtime'] = timestamp
@@ -142,9 +144,9 @@ def save_image(imagedata, contenttype=None, timestamp=None, title='',
     k = s3bucket.get_key(doc_id)
     if not k:
         headers = {}
-        headers['Content-Type'] = contenttype
+        headers['Content-Type'] = str(contenttype)
         k = boto.s3.key.Key(s3bucket)
-        k.key = doc_id 
+        k.key = str(doc_id)
         k.set_metadata('width', str(doc['width']))
         k.set_metadata('height', str(doc['height']))
         k.set_contents_from_string(imagedata, headers, replace=True)
