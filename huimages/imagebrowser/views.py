@@ -168,7 +168,7 @@ def upload_serve_swffile(request):
     """Server the Shopwave uploader - should be served from the same path as the upload destination."""
     ret = HttpResponse(mimetype="application/xhtml+xml")
     fd = open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'swfupload.swf'))
-    ret.write(fd.read())
+    ret.write(fd.read(), mimetype='application/x-shockwave-flash')
     return ret
 
 

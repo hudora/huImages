@@ -16,6 +16,7 @@ dependencies:
 	pip -q install -E testenv -r requirements.txt
 
 build:
+	curl -o huimages/imagebrowser/swfupload.swf http://s.hdimg.net/libs/swfupload/swfupload.swf
 	python setup.py build sdist bdist_egg
 
 statistics:
