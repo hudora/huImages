@@ -210,7 +210,7 @@ def _get_original_file(doc_id):
     except couchdb.client.ResourceNotFound:
         return None
 
-    filename = doc['_attachments'].keys()[0]
+    filename = list(doc['_attachments'].keys())[0]
 
     # save original Image in Cache
     filedata = db.get_attachment(doc_id, filename)

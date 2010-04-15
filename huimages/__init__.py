@@ -126,7 +126,7 @@ def save_image(imagedata, contenttype=None, timestamp=None, title='',
     if typ and (typ not in doc.get('types', [])):
         doc.setdefault('types', []).append(typ)
     if references:
-        for key, value in references.items():
+        for key, value in list(references.items()):
             if value not in doc.get('references', {}).get(key, []):
                 doc.setdefault('references', {}).setdefault(key, []).append(value)
     if title and title not in doc.get('title', []):
@@ -183,7 +183,7 @@ def get_imagedoc(imageid):
 def get_length(imageid):
     """Get the length in bytes of an unmodified image."""
     doc = get_imagedoc(imageid)
-    attachment = doc['_attachments'][doc['_attachments'].keys()[0]]
+    attachment = doc['_attachments'][list(doc['_attachments'].keys())[0]]
     return attachment['length']
     
 
@@ -260,7 +260,7 @@ def scaled_tag(imageid, size='150x150', *args, **kwargs):
     if width and height:
         ret.append('width="%d" height="%d"' % (width, height))
     ret.extend(args)
-    for key, val in kwargs.items():
+    for key, val in list(kwargs.items()):
         ret.append('%s="%s"' % (cgi.escape(key, True), cgi.escape(val, True)))
     if 'alt' not in kwargs:
         ret.append('alt=""')
@@ -315,7 +315,7 @@ def update_metadata(doc_id, timestamp=None, title='', references=None, typ=''):
         doc.setdefault('title', []).append(title)
     
     if references:
-        for key, value in references.items():
+        for key, value in list(references.items()):
             if value not in doc.get('references', {}).get(key, []):
                 doc.setdefault('references', {}).setdefault(key, []).append(value)
     

@@ -1,5 +1,4 @@
 # Functionality
-
 huImages provides an infrastructure for storing, serving and scaling images.
 It might not work for facebook or flickr scale image-pools, but for a few
 hundred thousand images it woks very nicely. Currently it only supports
@@ -166,10 +165,22 @@ or has access to the CouchDB or S3 bucket. Be sure that your S3 bucket does
 [11]: http://www.bucketexplorer.com/documentation/amazon-s3--access-control-list-details.html
 
 
+# The imagebrowser
+
+This distribution includes `huimages.imagebrowser`, a [Django][[django] Application using huImages to produce
+a (very basic) flickr like experience. It allows uploading and tagging of images and browsing by tag. Upload
+comes with a multi file uploadimplemented with [SWFUpload][swfupload].
+
+[django]: http://www.djangoproject.com/
+[swfupload]: http://swfupload.org/
+
+
 # Further Reading
 
- * [Blogpost about image Serving][12] (in german)
- * [django-photologue][13] - somewhat similar application
+ * huDjango comes with an [hudjango.storage.ImageServerStorage][12], which integrates huImages and Django
+ * [Blogpost about image Serving][13] (in german)
+ * [django-photologue][14] - somewhat similar application
 
-[12]: http://blogs.23.nu/disLEXia/2009/02/imageserver/
-[13]: http://code.google.com/p/django-photologue/
+[12]: http://github.com/hudora/huDjango/blob/master/hudjango/storage/ImageServerStorage.py
+[13]: http://blogs.23.nu/disLEXia/2009/02/imageserver/
+[14]: http://code.google.com/p/django-photologue/
