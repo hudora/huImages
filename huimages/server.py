@@ -28,7 +28,7 @@ from flup.server.fcgi_fork import WSGIServer
 # export AWS_ACCESS_KEY_ID='AKIRA...Z'
 # export AWS_SECRET_ACCESS_KEY='hal6...7'
 
-COUCHSERVER = os.environ.get('COUCHSERVER', 'http://127.0.0.1:5984')
+COUCHSERVER = os.environ.get('HUIMAGESCOUCHSERVER', os.environ.get('COUCHSERVER', 'http://127.0.0.1:5984'))
 #COUCHSERVER = "http://couchdb.local.hudora.biz:5984"
 CACHEDIR = os.path.abspath('../cache')
 S3BUCKET = os.environ['S3BUCKET']
@@ -105,10 +105,10 @@ def mark_broken(doc_id):
 def imagserver(environ, start_response):
     """Simple WSGI complient Server."""
     parts = environ.get('PATH_INFO', '').split('/')
-    if len(parts) != 3:
+    if len(parts) < 3:
         start_response('404 Not Found', [('Content-Type', 'text/plain')])
         return ["File not found\n"]
-    typ, doc_id = parts[1:]
+    typ, doc_id = parts[1:3]
     doc_id = doc_id.strip('jpeg.')
     if not typ_re.match(typ):
         start_response('501 Error', [('Content-Type', 'text/plain')])
@@ -124,7 +124,7 @@ def imagserver(environ, start_response):
     if os.path.exists(cachefilename):
         # serve request from cache
         start_response('200 OK', [('Content-Type', 'image/jpeg'),
-                                  ('Cache-Control', 'max-age=172800, public'), # 2 Days
+                                  ('Cache-Control', 'max-age=1728000, public'),  # 20 Days
                                   ])
         return open(cachefilename)
 
@@ -162,7 +162,7 @@ def imagserver(environ, start_response):
         imagefile = open(cachefilename)
 
     start_response('200 OK', [('Content-Type', 'image/jpeg'),
-                              ('Cache-Control', 'max-age=172800, public'), # 2 Days
+                              ('Cache-Control', 'max-age=1728000, public'),  # 20 Days
                               ])
     return imagefile
 
@@ -210,7 +210,7 @@ def _get_original_file(doc_id):
     except couchdb.client.ResourceNotFound:
         return None
 
-    filename = doc['_attachments'].keys()[0]
+    filename = list(doc['_attachments'].keys())[0]
 
     # save original Image in Cache
     filedata = db.get_attachment(doc_id, filename)
@@ -241,4 +241,4 @@ if standalone:
     httpd.serve_forever()
 
 # FastCGI
-WSGIServer(save_imagserver).run() # , bindAddress = '/tmp/fastcgi.socket').run()
+WSGIServer(save_imagserver).run()

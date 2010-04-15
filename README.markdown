@@ -1,5 +1,4 @@
 # Functionality
-
 huImages provides an infrastructure for storing, serving and scaling images.
 It might not work for facebook or flickr scale image-pools, but for a few
 hundred thousand images it woks very nicely. Currently it only supports
@@ -55,7 +54,7 @@ should also work well on modenrn ext2/3 implementations with
 [5]: http://code.google.com/soc/2008/freebsd/appinfo.html?csaid=69F96419FD4920FF
 [6]: http://ext2.sourceforge.net/2005-ols/paper-html/node3.html
 
-Wen a image is Requested and the original image is not in the Cache, the
+When a image is Requested and the original image is not in the Cache, the
 original is pulled form CouchDB/S3 and put into the filesystem cache. Then the
 [Python Imaging Library (PIL)[7] isused to generate the scaled version of the
 image. The result is cached again in the filesystem and send to the client.
@@ -88,12 +87,9 @@ EC2-SSH key is named "ssh-ec2" and located in the current directory.
 You now should be logged into the new Amazon instance
 
     sudo apt-get update -y
-    sudo apt-get install -y couchdb lighttpd git-core
-    sudo apt-get install -y python-pip python-boto python-imaging
-    sudo apt-get install -y python-couchdb python-flup
+    sudo apt-get install -y couchdb lighttpd git-core python-pip python-boto python-imaging python-couchdb python-flup
 
-    git clone git://github.com/hudora/huImages.git
-    sudo mv huImages /usr/local/huImages
+    sudo git clone git://github.com/hudora/huImages.git /usr/local/huImages
     cd /usr/local/huImages
     sudo mkdir /mnt/huimages-cache
     sudo ln -s /mnt/huimages-cache /usr/local/huImages/cache
@@ -114,10 +110,11 @@ Now you can start putting images into the Database.
 # Client usge
 
 Now you can start putting images into the Database. If you don't run on the
-same Server, you must find a wy to make CouchDB accessible to the client.
+same Server, you must find a way to make CouchDB accessible to the client.
 [Running a CouchDB cluster on Amazon EC2][10] might be a good startingpoint.
 An other (easier) approach is simply running the client on the same machine
-as the server.
+as the server. Under extreme circumstances image serving can happen without
+access to CouchDB but you loose some of the features.
 
 [10]: http://blogs.23.nu/c0re/2009/12/running-a-couchdb-cluster-on-amazon-ec2/
 
@@ -127,7 +124,7 @@ values:
     AWS_ACCESS_KEY_ID=AAOWSMAKNATAM5
     AWS_SECRET_ACCESS_KEY=aHo789V1H1Kzrs3yIaj7Uvxtskz6fUvgpa6n
     IMAGESERVERURL=http://i.hdimg.net/
-    COUCHSERVER=http://admin:7o8V91H1Krzs3yIjaU7xtv@127.0.0.1:5984/
+    HUIMAGESCOUCHSERVER=http://admin:7o8V3yIjaU7xtv@127.0.0.1:5984/
     S3BUCKET=originals.i.hdimg.net
     
     Now you should be able to use it like this:
@@ -138,10 +135,10 @@ values:
     '23EQ53G6WZTGF5675CUJQFKBIS6UWWOL01'
 
     >>> huimages.imageurl('23EQ53G6WZTGF5675CUJQFKBIS6UWWOL01')
-    'http://i.hdimg.net/o/23EQ53G6WZTGF5675CUJQFKBIS6UWWOL01.jpeg'
+    'http://i.hdimg.net/o/23EQ53G6WZTGF5675CUJQFKBIS6UWWOL01/test.jpeg'
 
     >>> huimages.scaled_imageurl('23EQ53G6WZTGF5675CUJQFKBIS6UWWOL01', size="150x150!")
-    'http://i.hdimg.net/150x150!/23EQ53G6WZTGF5675CUJQFKBIS6UWWOL01.jpeg'
+    'http://i.hdimg.net/150x150!/23EQ53G6WZTGF5675CUJQFKBIS6UWWOL01/test.jpeg'
 
     >>> huimages.get_length('23EQ53G6WZTGF5675CUJQFKBIS6UWWOL01')
     87761
@@ -149,7 +146,12 @@ values:
     >>> huimages.scaled_dimensions('23EQ53G6WZTGF5675CUJQFKBIS6UWWOL01', '320x240')
     (240, 240)
 
-Call `pydoc huimages` for further documentation.
+Call `pydoc huimages` for further documentation. Most useful ist
+`scaled_tag()` which can create an image tag including dimensions for faster
+rendering and tries hard to generate a meaningful file name and alt tag to
+make the image easier to be found by search engines. You can use the
+environment variable `HUIMAGESALTADDITION` to add an extra text to all alt
+tags
 
 
 # Security
@@ -166,10 +168,22 @@ or has access to the CouchDB or S3 bucket. Be sure that your S3 bucket does
 [11]: http://www.bucketexplorer.com/documentation/amazon-s3--access-control-list-details.html
 
 
+# The imagebrowser
+
+This distribution includes `huimages.imagebrowser`, a [Django][[django] Application using huImages to produce
+a (very basic) flickr like experience. It allows uploading and tagging of images and browsing by tag. Upload
+comes with a multi file uploadimplemented with [SWFUpload][swfupload].
+
+[django]: http://www.djangoproject.com/
+[swfupload]: http://swfupload.org/
+
+
 # Further Reading
 
- * [Blogpost about image Serving][12] (in german)
- * [django-photologue][13] - somewhat similar application
+ * huDjango comes with an [hudjango.storage.ImageServerStorage][12], which integrates huImages and Django
+ * [Blogpost about image Serving][13] (in german)
+ * [django-photologue][14] - somewhat similar application
 
-[12]: http://blogs.23.nu/disLEXia/2009/02/imageserver/
-[13]: http://code.google.com/p/django-photologue/
+[12]: http://github.com/hudora/huDjango/blob/master/hudjango/storage/ImageServerStorage.py
+[13]: http://blogs.23.nu/disLEXia/2009/02/imageserver/
+[14]: http://code.google.com/p/django-photologue/

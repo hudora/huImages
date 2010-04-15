@@ -1,5 +1,9 @@
 * Multi-File upload: error handler
-* Multi-File upload: pass through user information
+* Multi-File upload: pass through user information - http://swfupload.org/forum/generaldiscussion/1211 http://stackoverflow.com/questions/612734/code-samples-for-django-swfupload
 * Multi-File upload: styling of upload page
 * "Titel bearbeiten" klappt "seltsam"
 * Tags zufügen klappt doof
+* Add a gallery like
+* http://buildinternet.com/2009/05/supersized-20-full-screen-imagebackground-slideshow-jquery-plugin-w-transitions-and-controls/
+* http://www.twospy.com/galleriffic/#7
+* http://benjaminsterling.com/jquery-jqgalscroll-photo-gallery/
