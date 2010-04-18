@@ -1,3 +1,8 @@
+2.2    The Server can now hadle paths with fake filenames. You can use 
+       http://i.hdimg.net/o/ZD...H01/the-skate-picture.jpeg instead of
+       http://i.hdimg.net/o/ZD...H01.jpeg
+       Such filenames are automatically generated in scaled_tag()
+       HUIMAGESCOUCHSERVER is now the prefered way to configure the CouchDB.
 2.1    Uploading more than one file at once
 2.01   Show ALL tags, not only user tags on an image
 2.0    OpenSourced, use Amazon S3 for image storage

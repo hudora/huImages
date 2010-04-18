@@ -54,7 +54,7 @@ should also work well on modenrn ext2/3 implementations with
 [5]: http://code.google.com/soc/2008/freebsd/appinfo.html?csaid=69F96419FD4920FF
 [6]: http://ext2.sourceforge.net/2005-ols/paper-html/node3.html
 
-Wen a image is Requested and the original image is not in the Cache, the
+When a image is Requested and the original image is not in the Cache, the
 original is pulled form CouchDB/S3 and put into the filesystem cache. Then the
 [Python Imaging Library (PIL)[7] isused to generate the scaled version of the
 image. The result is cached again in the filesystem and send to the client.
@@ -87,12 +87,9 @@ EC2-SSH key is named "ssh-ec2" and located in the current directory.
 You now should be logged into the new Amazon instance
 
     sudo apt-get update -y
-    sudo apt-get install -y couchdb lighttpd git-core
-    sudo apt-get install -y python-pip python-boto python-imaging
-    sudo apt-get install -y python-couchdb python-flup
+    sudo apt-get install -y couchdb lighttpd git-core python-pip python-boto python-imaging python-couchdb python-flup
 
-    git clone git://github.com/hudora/huImages.git
-    sudo mv huImages /usr/local/huImages
+    sudo git clone git://github.com/hudora/huImages.git /usr/local/huImages
     cd /usr/local/huImages
     sudo mkdir /mnt/huimages-cache
     sudo ln -s /mnt/huimages-cache /usr/local/huImages/cache

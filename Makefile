@@ -1,15 +1,17 @@
 # setting the PATH seems only to work in GNUmake not in BSDmake
-PATH := ./testenv/bin:$(PATH)
+PATH := ./pythonenv/bin:$(PATH)
 
-default: dependencies check
+default: dependencies
 
-hudson: dependencies check statistics
-	find huimages -name '*.py' | xargs /usr/local/hudorakit/bin/hd_pep8
-	/usr/local/hudorakit/bin/hd_pylint -f parseable huimages | tee .pylint.out
-
-check:
-	find huimages -name '*.py' | xargs /usr/local/hudorakit/bin/hd_pep8
-	/usr/local/hudorakit/bin/hd_pylint huimages
+cleanup: clean
+	2to3 -w -f zip -f xreadlines -f xrange -f ws_comma -f throw -f standarderror -f repr \
+	-f raise -f paren -f nonzero -f ne -f idioms -f has_key \
+	-f getcwdu -f filter -f except huimages
+	# on 2.7 we also can use -f print -f isinstance -f reduce
+	pip -q install -E pythonenv 'huTools>=0.44' pep8
+	./pythonenv/bin/reindent.py -r huimages
+	# returncode is broken until http://bit.ly/dknmXy is pulled into the main trunk
+	-./pythonenv/bin/pep8 --count --repeat --ignore=E501,E301,E302,E303 huimages
 
 dependencies:
 	virtualenv testenv
@@ -17,11 +19,10 @@ dependencies:
 
 build:
 	curl -o huimages/imagebrowser/swfupload.swf http://s.hdimg.net/libs/swfupload/swfupload.swf
-	python setup.py build sdist bdist_egg
+	python setup.py build sdist
 
 statistics:
 	sloccount --wide --details huimages > .sloccount.sc
-	
 
 upload: build
 	python setup.py sdist upload
