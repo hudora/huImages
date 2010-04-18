@@ -110,10 +110,11 @@ Now you can start putting images into the Database.
 # Client usge
 
 Now you can start putting images into the Database. If you don't run on the
-same Server, you must find a wy to make CouchDB accessible to the client.
+same Server, you must find a way to make CouchDB accessible to the client.
 [Running a CouchDB cluster on Amazon EC2][10] might be a good startingpoint.
 An other (easier) approach is simply running the client on the same machine
-as the server.
+as the server. Under extreme circumstances image serving can happen without
+access to CouchDB but you loose some of the features.
 
 [10]: http://blogs.23.nu/c0re/2009/12/running-a-couchdb-cluster-on-amazon-ec2/
 
@@ -123,7 +124,7 @@ values:
     AWS_ACCESS_KEY_ID=AAOWSMAKNATAM5
     AWS_SECRET_ACCESS_KEY=aHo789V1H1Kzrs3yIaj7Uvxtskz6fUvgpa6n
     IMAGESERVERURL=http://i.hdimg.net/
-    COUCHSERVER=http://admin:7o8V91H1Krzs3yIjaU7xtv@127.0.0.1:5984/
+    HUIMAGESCOUCHSERVER=http://admin:7o8V3yIjaU7xtv@127.0.0.1:5984/
     S3BUCKET=originals.i.hdimg.net
     
     Now you should be able to use it like this:
@@ -134,10 +135,10 @@ values:
     '23EQ53G6WZTGF5675CUJQFKBIS6UWWOL01'
 
     >>> huimages.imageurl('23EQ53G6WZTGF5675CUJQFKBIS6UWWOL01')
-    'http://i.hdimg.net/o/23EQ53G6WZTGF5675CUJQFKBIS6UWWOL01.jpeg'
+    'http://i.hdimg.net/o/23EQ53G6WZTGF5675CUJQFKBIS6UWWOL01/test.jpeg'
 
     >>> huimages.scaled_imageurl('23EQ53G6WZTGF5675CUJQFKBIS6UWWOL01', size="150x150!")
-    'http://i.hdimg.net/150x150!/23EQ53G6WZTGF5675CUJQFKBIS6UWWOL01.jpeg'
+    'http://i.hdimg.net/150x150!/23EQ53G6WZTGF5675CUJQFKBIS6UWWOL01/test.jpeg'
 
     >>> huimages.get_length('23EQ53G6WZTGF5675CUJQFKBIS6UWWOL01')
     87761
@@ -145,7 +146,12 @@ values:
     >>> huimages.scaled_dimensions('23EQ53G6WZTGF5675CUJQFKBIS6UWWOL01', '320x240')
     (240, 240)
 
-Call `pydoc huimages` for further documentation.
+Call `pydoc huimages` for further documentation. Most useful ist
+`scaled_tag()` which can create an image tag including dimensions for faster
+rendering and tries hard to generate a meaningful file name and alt tag to
+make the image easier to be found by search engines. You can use the
+environment variable `HUIMAGESALTADDITION` to add an extra text to all alt
+tags
 
 
 # Security

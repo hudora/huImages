@@ -38,6 +38,7 @@ import mimetypes
 import os
 import os.path
 import random
+import re
 import time
 import urlparse
 from cStringIO import StringIO
@@ -220,18 +221,27 @@ def _scale(want_width, want_height, is_width, is_height):
 
 def imageurl(imageid, size='o'):
     """Get the URL where the Image can be accessed."""
-    return urlparse.urljoin(IMAGESERVERURL, os.path.join(size, imageid)) + '.jpeg'
-
+    #return urlparse.urljoin(IMAGESERVERURL, os.path.join(size, imageid)) + '.jpeg'
+    return scaled_imageurl(imageid, size)
 
 def scaled_imageurl(imageid, size='150x150'):
     """Get the URL where a scaled version of the Image can be accessed."""
     doc = get_imagedoc(imageid)
     filename = imageid + '.jpeg'
-    if doc and 'title' in doc:
-        # generate an url which contains a reference to the title tag
-        title = doc['title'][0].replace(' ', '-')
-        re.sub(r'(\W|[_=,:-])+', '_', title)
-        filename = "imageid/%s.jpeg" % title
+    if doc:
+        # generate an url which contains a reference to the title of filename
+        title = ''
+        if 'title' in doc:
+            title = doc['title'][0].replace(' ', '-')
+        elif doc and '_attachments' in doc and doc['_attachments']:
+            title = doc['_attachments'].keys()[-1].replace(' ', '-')
+            if title.lower().endswith('.jpg'):
+                title = title[:-4]
+            if title.lower().endswith('.jpeg'):
+                title = title[:-5]
+        title = cgi.escape(re.sub(u'([^\w_=,:-])+', '_', title))
+        if title:
+            filename = "%s/%s.jpeg" % (imageid, title)
     return urlparse.urljoin(IMAGESERVERURL, os.path.join(_sizes.get(size, size), filename))
 
 
@@ -267,6 +277,10 @@ def scaled_tag(imageid, size='150x150', *args, **kwargs):
 
     >>> scaled_tag('0eadsaf', alt='neu')
     '<img src="http://images.hudora.de/477x600/0eadsaf.jpeg" width="328" height="600" alt="neu"/>'
+    
+    If you don't give an alt tag the system tries to generate one based on image title or
+    image file name. If the environment variable HUIMAGESALTADDITION is set, that text is
+    appended to the generated alt-text. This might be helpful for SEO purposes.
     """
     ret = ['<img src="%s"' % cgi.escape(scaled_imageurl(imageid, size), True)]
     width, height = scaled_dimensions(imageid, size)
@@ -279,9 +293,13 @@ def scaled_tag(imageid, size='150x150', *args, **kwargs):
         doc = get_imagedoc(imageid)
         if doc and 'title' in doc:
             # use the newest title as alt text
-            ret.append('alt="%s"' % cgi.escape(doc['title'][-1]))
+            ret.append('alt="%s%s"' % (cgi.escape(doc['title'][-1]),
+                                       cgi.escape(os.environ.get('HUIMAGESALTADDITION', ''))))
+        elif doc and '_attachments' in doc and doc['_attachments']:
+            ret.append('alt="%s%s"' % (cgi.escape(doc['_attachments'].keys()[-1].replace('_', ' ')),
+                                       cgi.escape(os.environ.get('HUIMAGESALTADDITION', ''))))
         else:
-            ret.append('alt=""')
+            ret.append('alt="%s"' % cgi.escape(os.environ.get('HUIMAGESALTADDITION', '').strip()))
     ret.append('/>')
     return ' '.join(ret)
 

@@ -3,6 +3,8 @@
        http://i.hdimg.net/o/ZD...H01.jpeg
        Such filenames are automatically generated in scaled_tag()
        HUIMAGESCOUCHSERVER is now the prefered way to configure the CouchDB.
+       HUIMAGESALTADDITION and other stuff for making the software more
+       search engine friendly.
 2.1    Uploading more than one file at once
 2.01   Show ALL tags, not only user tags on an image
 2.0    OpenSourced, use Amazon S3 for image storage
