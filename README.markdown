@@ -125,7 +125,7 @@ values:
     AWS_SECRET_ACCESS_KEY=aHo789V1H1Kzrs3yIaj7Uvxtskz6fUvgpa6n
     IMAGESERVERURL=http://i.hdimg.net/
     HUIMAGESCOUCHSERVER=http://admin:7o8V3yIjaU7xtv@127.0.0.1:5984/
-    S3BUCKET=originals.i.hdimg.net
+    HUIMAGES3BUCKET=originals.i.hdimg.net
     
     Now you should be able to use it like this:
     
