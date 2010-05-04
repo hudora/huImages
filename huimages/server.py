@@ -141,7 +141,8 @@ def imagserver(environ, start_response):
         width, height = typ.split('x')
         try:
             img = Image.open(orgfile)
-
+            if img.mode != "RGB":
+                img = img.convert("RGB")
             if height.endswith('!'):
                 height = height.strip('!')
                 img = _crop_image(width, height, img)
@@ -152,9 +153,6 @@ def imagserver(environ, start_response):
             mark_broken(doc_id)
             start_response('404 Internal Server Error', [('Content-Type', 'text/plain')])
             return ["File not found"]
-
-        if img.mode != "RGB":
-            img = img.convert("RGB")
 
         tempfilename = tempfile.mktemp(prefix='tmp_%s_%s' % (typ, doc_id), dir=CACHEDIR)
         img.save(tempfilename, "JPEG")
