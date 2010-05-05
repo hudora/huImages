@@ -28,9 +28,15 @@ from flup.server.fcgi_fork import WSGIServer
 # export AWS_ACCESS_KEY_ID='AKIRA...Z'
 # export AWS_SECRET_ACCESS_KEY='hal6...7'
 
+<<<<<<< HEAD:huimages/server.py
 COUCHSERVER = os.environ.get('HUIMAGESCOUCHSERVER', os.environ.get('COUCHSERVER', 'http://127.0.0.1:5984'))
+=======
+S3BUCKET = os.environ.get('HUIMAGES3BUCKET',
+                          os.environ.get('S3BUCKET', 'originals.i.hdimg.net'))
+COUCHSERVER = os.environ.get('HUIMAGESCOUCHSERVER',
+                             os.environ.get('COUCHSERVER', 'http://127.0.0.1:5984'))
+>>>>>>> acb0d451a6d979c9b11a05394e8ea70479bec88d:huimages/server.py
 CACHEDIR = os.path.abspath('../cache')
-S3BUCKET = os.environ['S3BUCKET']
 COUCHDB_NAME = "huimages"
 typ_re = re.compile('^(o|\d+x\d+!?)$')
 docid_re = re.compile('^[A-Z0-9]+$')
@@ -123,7 +129,7 @@ def imagserver(environ, start_response):
     if os.path.exists(cachefilename):
         # serve request from cache
         start_response('200 OK', [('Content-Type', 'image/jpeg'),
-                                  ('Cache-Control', 'max-age=1728000, public'), # 20 Days
+                                  ('Cache-Control', 'max-age=1728000, public'),  # 20 Days
                                   ])
         return open(cachefilename)
 
@@ -139,7 +145,8 @@ def imagserver(environ, start_response):
         width, height = typ.split('x')
         try:
             img = Image.open(orgfile)
-
+            if img.mode != "RGB":
+                img = img.convert("RGB")
             if height.endswith('!'):
                 height = height.strip('!')
                 img = _crop_image(width, height, img)
@@ -151,9 +158,6 @@ def imagserver(environ, start_response):
             start_response('404 Internal Server Error', [('Content-Type', 'text/plain')])
             return ["File not found"]
 
-        if img.mode != "RGB":
-            img = img.convert("RGB")
-
         tempfilename = tempfile.mktemp(prefix='tmp_%s_%s' % (typ, doc_id), dir=CACHEDIR)
         img.save(tempfilename, "JPEG")
         os.rename(tempfilename, cachefilename)
@@ -161,7 +165,7 @@ def imagserver(environ, start_response):
         imagefile = open(cachefilename)
 
     start_response('200 OK', [('Content-Type', 'image/jpeg'),
-                              ('Cache-Control', 'max-age=17280000, public'), # 20 Days
+                              ('Cache-Control', 'max-age=17280000, public'),  # 20 Days
                               ])
     return imagefile
 
@@ -209,7 +213,7 @@ def _get_original_file(doc_id):
     except couchdb.client.ResourceNotFound:
         return None
 
-    filename = doc['_attachments'].keys()[0]
+    filename = list(doc['_attachments'].keys())[0]
 
     # save original Image in Cache
     filedata = db.get_attachment(doc_id, filename)
@@ -240,4 +244,4 @@ if standalone:
     httpd.serve_forever()
 
 # FastCGI
-WSGIServer(save_imagserver).run() # , bindAddress = '/tmp/fastcgi.socket').run()
+WSGIServer(save_imagserver).run()

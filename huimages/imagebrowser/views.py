@@ -32,11 +32,11 @@ COUCHDB_NAME = "huimages"
 
 def get_rating(imageid):
     server = couchdb.client.Server(COUCHSERVER)
-    db = server[COUCHDB_NAME+'_meta']
+    db = server[COUCHDB_NAME + '_meta']
     ret = [x.value for x in db.view('ratings/all', startkey=imageid, limit=1) if x.key == imageid]
     if ret:
         votecount = ret[0][0]
-        return votecount, float(ret[0][1])/votecount
+        return votecount, float(ret[0][1]) / votecount
     else:
         return 0, 0
 
@@ -44,7 +44,7 @@ def get_rating(imageid):
 def get_user_tags(imageid, userid):
     """Returns a list of user specific tags"""
     server = couchdb.client.Server(COUCHSERVER)
-    db = server[COUCHDB_NAME+'_meta']
+    db = server[COUCHDB_NAME + '_meta']
     doc_id = "%s-%s" % (imageid, userid)
     return db.get(doc_id, {}).get('tags', [])
 
@@ -52,7 +52,7 @@ def get_user_tags(imageid, userid):
 def get_all_tags(imageid):
     """Return a list of all tags for an image"""
     server = couchdb.client.Server(COUCHSERVER)
-    db = server[COUCHDB_NAME+'_meta']
+    db = server[COUCHDB_NAME + '_meta']
     doc_id = imageid
     tags = set([x.value for x in db.view('tags/tags_per_document', startkey=imageid, endkey="%sZ" % imageid)])
     return list(tags)
@@ -60,7 +60,7 @@ def get_all_tags(imageid):
 
 def is_favorite(imageid, userid):
     server = couchdb.client.Server(COUCHSERVER)
-    db = server[COUCHDB_NAME+'_meta']
+    db = server[COUCHDB_NAME + '_meta']
     doc_id = "%s-%s" % (imageid, userid)
     return db.get(doc_id, {}).get('favorite', False)
 
@@ -68,14 +68,14 @@ def is_favorite(imageid, userid):
 @cache_function(60)
 def get_tagcount():
     server = couchdb.client.Server(COUCHSERVER)
-    db = server[COUCHDB_NAME+'_meta']
+    db = server[COUCHDB_NAME + '_meta']
     ret = dict([(x.key, x.value) for x in db.view('tags/tagcount', group=True)])
     return ret
 
 
 def update_user_metadata(imageid, userid, data):
     server = couchdb.client.Server(COUCHSERVER)
-    db = server[COUCHDB_NAME+'_meta']
+    db = server[COUCHDB_NAME + '_meta']
 
     doc_id = "%s-%s" % (imageid, userid)
     doc = {'imageid': imageid, 'userid': userid}
@@ -93,14 +93,14 @@ def update_user_metadata(imageid, userid, data):
 def images_by_tag(tagname):
     """Returns ImageIds with a certain tag."""
     server = couchdb.client.Server(COUCHSERVER)
-    db = server[COUCHDB_NAME+'_meta']
+    db = server[COUCHDB_NAME + '_meta']
     ret = [x.value for x in db.view('tags/document_per_tag', startkey=tagname, endkey="%sZ" % tagname)]
     return ret
 
 
 def get_favorites(uid):
     server = couchdb.client.Server(COUCHSERVER)
-    db = server[COUCHDB_NAME+'_meta']
+    db = server[COUCHDB_NAME + '_meta']
     ret = [x.value for x in db.view('favorites/all', startkey=uid, endkey="%sZ" % uid)]
     return ret
 
@@ -238,8 +238,8 @@ def next_image(request, imageid):
 
 def tag_suggestion(request, imageid):
     prefix = request.GET.get('tag', '')
-    tagcount = get_tagcount().items()
-    tagcount.sort(key = itemgetter(1), reverse=True)
+    tagcount = list(get_tagcount().items())
+    tagcount.sort(key=itemgetter(1), reverse=True)
     json = simplejson.dumps([x[0] for x in tagcount if x[0].startswith(prefix)])
     response = HttpResponse(json, mimetype='application/json')
     return response
