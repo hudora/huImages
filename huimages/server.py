@@ -104,7 +104,7 @@ def mark_broken(doc_id):
 def imagserver(environ, start_response):
     """Simple WSGI complient Server."""
     parts = environ.get('PATH_INFO', '').split('/')
-    if len(parts) < 4:
+    if len(parts) < 3:
         start_response('404 Not Found', [('Content-Type', 'text/plain')])
         return ["File not found\n"]
     typ, doc_id = parts[1:3]
