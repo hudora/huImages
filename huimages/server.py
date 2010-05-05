@@ -28,14 +28,10 @@ from flup.server.fcgi_fork import WSGIServer
 # export AWS_ACCESS_KEY_ID='AKIRA...Z'
 # export AWS_SECRET_ACCESS_KEY='hal6...7'
 
-<<<<<<< HEAD:huimages/server.py
-COUCHSERVER = os.environ.get('HUIMAGESCOUCHSERVER', os.environ.get('COUCHSERVER', 'http://127.0.0.1:5984'))
-=======
 S3BUCKET = os.environ.get('HUIMAGES3BUCKET',
                           os.environ.get('S3BUCKET', 'originals.i.hdimg.net'))
 COUCHSERVER = os.environ.get('HUIMAGESCOUCHSERVER',
                              os.environ.get('COUCHSERVER', 'http://127.0.0.1:5984'))
->>>>>>> acb0d451a6d979c9b11a05394e8ea70479bec88d:huimages/server.py
 CACHEDIR = os.path.abspath('../cache')
 COUCHDB_NAME = "huimages"
 typ_re = re.compile('^(o|\d+x\d+!?)$')
