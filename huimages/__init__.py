@@ -180,9 +180,13 @@ def get_imagedoc(imageid):
         return doc
     if len(__imagedoc_cache) > 5:
         __imagedoc_cache = {}
-    db = _setup_couchdb()
-    doc = db.get(imageid, {})
-    __imagedoc_cache[imageid] = doc
+    try:
+        db = _setup_couchdb()
+        doc = db.get(imageid, {})
+        __imagedoc_cache[imageid] = doc
+    except IOError:
+        # CouchDB not available
+        doc = None
     return doc
 
 
@@ -218,7 +222,6 @@ def _scale(want_width, want_height, is_width, is_height):
 
 def imageurl(imageid, size='o'):
     """Get the URL where the Image can be accessed."""
-    #return urlparse.urljoin(IMAGESERVERURL, os.path.join(size, imageid)) + '.jpeg'
     return scaled_imageurl(imageid, size)
 
 def scaled_imageurl(imageid, size='150x150'):
