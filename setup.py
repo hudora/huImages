@@ -18,7 +18,7 @@ setup(name='huImages',
       zip_safe=False,
       packages=find_packages(),
       include_package_data=True,
-      install_requires=['couchdb', 'huTools', 'boto'], # PIL/Imaging has serious issues with easy_install
+      install_requires=['httplib2', 'couchdb', 'huTools', 'boto'], # PIL/Imaging has serious issues with easy_install
       dependency_links = ['http://cybernetics.hudora.biz/nonpublic/eggs/',
                           'http://www.pythonware.com/products/pil/'],
 )

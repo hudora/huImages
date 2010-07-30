@@ -2,3 +2,4 @@ couchdb>=0.7
 http://effbot.org/downloads/Imaging-1.1.7.tar.gz
 boto
 huTools
+httplib2
