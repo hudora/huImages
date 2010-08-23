@@ -193,7 +193,7 @@ def _get_original_file(doc_id):
 
     # try to get file from S3
     conn = boto.connect_s3()
-    s3bucket = conn.get_bucket(S3BUCKET)
+    s3bucket = conn.get_bucket(S3BUCKET, validate=False)
     k = s3bucket.get_key(doc_id)
     if k:
         # write then rename to avoid race conditions
